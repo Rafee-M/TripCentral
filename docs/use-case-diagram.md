@@ -67,25 +67,38 @@ any of the websites above, and click **Submit / Render** to get the diagram imag
 @startuml TripCentral_UseCaseDiagram
 
 left to right direction
+scale 1.5
 
 skinparam packageStyle rectangle
 skinparam usecaseBackgroundColor White
 skinparam usecaseBorderColor Black
 skinparam rectangleBorderColor Black
 skinparam rectangleBackgroundColor White
+skinparam packageBorderColor Black
+skinparam packageBackgroundColor #FAFAFA
 skinparam arrowColor Black
 skinparam actorBorderColor Black
+skinparam defaultFontSize 14
+skinparam usecaseFontSize 12
+skinparam actorFontSize 14
+skinparam nodesep 14
+skinparam ranksep 50
 
-' ── Actors (stick figures) ──────────────────────────────
+' ══════════════════════════════════════════════════════════
+' LEFT ACTORS  (Primary / Secondary — Human)
+' ══════════════════════════════════════════════════════════
 actor "Guest" as Guest
 actor "Authenticated\nUser" as AuthUser
 actor "Friend /\nConnected User" as Friend
-actor "System" as System
 
-' ── System Boundary ─────────────────────────────────────
+' ── Generalization (Friend inherits AuthUser) ──────────
+Friend --|> AuthUser
+
+' ══════════════════════════════════════════════════════════
+' SYSTEM BOUNDARY
+' ══════════════════════════════════════════════════════════
 rectangle "TripCentral" {
 
-  ' ── User Management & Socials ─────────────────────────
   package "User Management & Socials" {
     usecase "Sign Up" as UC1
     usecase "Log In" as UC2
@@ -97,7 +110,6 @@ rectangle "TripCentral" {
     usecase "Receive Notifications" as UC8
   }
 
-  ' ── Mapping & Lists ──────────────────────────────────
   package "Mapping & Lists" {
     usecase "Search Locations" as UC9
     usecase "View Location Details" as UC10
@@ -108,7 +120,6 @@ rectangle "TripCentral" {
     usecase "Save Route" as UC15
   }
 
-  ' ── Collaboration & Community ─────────────────────────
   package "Collaboration & Community" {
     usecase "Share List (Private)" as UC16
     usecase "Invite User\nto Collaborate" as UC17
@@ -122,53 +133,57 @@ rectangle "TripCentral" {
   }
 }
 
-' ── Guest Associations ──────────────────────────────────
-Guest --> UC1
-Guest --> UC2
-Guest --> UC22
-Guest --> UC10
+' ══════════════════════════════════════════════════════════
+' RIGHT ACTOR  (Automated)
+' ══════════════════════════════════════════════════════════
+actor "System" as System
 
-' ── Authenticated User Associations ─────────────────────
-AuthUser --> UC2
-AuthUser --> UC4
-AuthUser --> UC5
-AuthUser --> UC6
-AuthUser --> UC8
-AuthUser --> UC9
-AuthUser --> UC10
-AuthUser --> UC11
-AuthUser --> UC12
-AuthUser --> UC13
-AuthUser --> UC14
-AuthUser --> UC15
-AuthUser --> UC16
-AuthUser --> UC17
-AuthUser --> UC21
-AuthUser --> UC22
-AuthUser --> UC23
-AuthUser --> UC24
+' ── Guest Associations ─────────────────────────────────
+Guest -- UC1
+Guest -- UC2
+Guest -- UC10
+Guest -- UC22
 
-' ── Friend / Connected User Associations ────────────────
-Friend --> UC7
-Friend --> UC8
-Friend --> UC18
-Friend --> UC19
-Friend --> UC20
+' ── Authenticated User Associations ────────────────────
+AuthUser -- UC2
+AuthUser -- UC4
+AuthUser -- UC5
+AuthUser -- UC6
+AuthUser -- UC8
+AuthUser -- UC9
+AuthUser -- UC10
+AuthUser -- UC11
+AuthUser -- UC12
+AuthUser -- UC13
+AuthUser -- UC14
+AuthUser -- UC15
+AuthUser -- UC16
+AuthUser -- UC17
+AuthUser -- UC21
+AuthUser -- UC22
+AuthUser -- UC23
+AuthUser -- UC24
 
-' ── System Associations ─────────────────────────────────
-System --> UC3
-System --> UC8
+' ── Friend / Connected User Associations ───────────────
+Friend -- UC7
+Friend -- UC8
+Friend -- UC18
+Friend -- UC19
+Friend -- UC20
 
-' ── Relationships ───────────────────────────────────────
-UC1 ..> UC3 : <<extend>>
+' ── System Associations (from right side) ──────────────
+UC3 -- System
+UC8 -- System
+
+' ── <<include>> Relationships ──────────────────────────
 UC11 ..> UC12 : <<include>>
-UC12 ..> UC9 : <<include>>
-UC17 ..> UC8 : <<include>>
-UC6 ..> UC8 : <<include>>
-UC19 ..> UC20 : <<extend>>
+UC12 ..> UC9  : <<include>>
+UC17 ..> UC8  : <<include>>
+UC6  ..> UC8  : <<include>>
 
-' ── Generalization ──────────────────────────────────────
-Friend --|> AuthUser
+' ── <<extend>> Relationships ──────────────────────────
+UC1  ..> UC3  : <<extend>>
+UC19 ..> UC20 : <<extend>>
 
 @enduml
 ```
@@ -177,6 +192,10 @@ Friend --|> AuthUser
 
 ## How to Read the Diagram
 
+- **Actor placement** — Primary and secondary human actors (*Guest*,
+  *Authenticated User*, *Friend*) are on the **left**; the automated *System*
+  actor is on the **right**.  This keeps association lines flowing in one
+  direction and avoids arrow collisions.
 - **Solid lines** from an actor to an oval (use case) indicate that the actor
   can initiate or participate in that use case.
 - **`<<include>>`** (dashed arrow) means the base use case *always* triggers the
@@ -186,3 +205,6 @@ Friend --|> AuthUser
   "Verify Email" when triggered by the System).
 - **Generalization arrow** (solid triangle) from *Friend* to *Authenticated User*
   means a Friend inherits all capabilities of an Authenticated User.
+- **Printing** — The diagram is scaled at 1.5× for clear A3 printing.  When
+  rendering via PlantUML Online or PlantText, export as **SVG** or **PNG** for
+  the best print quality.
