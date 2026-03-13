@@ -67,15 +67,16 @@ any of the websites above, and click **Submit / Render** to get the diagram imag
 @startuml TripCentral_UseCaseDiagram
 
 left to right direction
-skinparam actorStyle awesome
-skinparam packageStyle rectangle
-skinparam usecaseBackgroundColor #FEFEFE
-skinparam usecaseBorderColor #4A90D9
-skinparam rectangleBackgroundColor #F4F8FB
-skinparam rectangleBorderColor #4A90D9
-skinparam arrowColor #333333
 
-' ── Actors ──────────────────────────────────────────────
+skinparam packageStyle rectangle
+skinparam usecaseBackgroundColor White
+skinparam usecaseBorderColor Black
+skinparam rectangleBorderColor Black
+skinparam rectangleBackgroundColor White
+skinparam arrowColor Black
+skinparam actorBorderColor Black
+
+' ── Actors (stick figures) ──────────────────────────────
 actor "Guest" as Guest
 actor "Authenticated\nUser" as AuthUser
 actor "Friend /\nConnected User" as Friend
