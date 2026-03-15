@@ -35,29 +35,27 @@ any of the websites above, and click **Submit / Render** to get the diagram imag
 3. Verify Email (extends Sign Up — triggered by System)
 4. View / Edit Profile
 5. Search Users
-6. Send Friend Request
-7. Accept / Reject Friend Request
-8. Receive Notifications
+6. Accept / Reject Invitation
+7. Receive Notifications
 
 ### Mapping & Lists
-9. Search Locations (Google Maps)
-10. View Location Details
-11. Create List
+8. Search Locations (Google Maps)
+9. View Location Details
+10. Create List
+11. Delete List
 12. Add Place to List
 13. Manage List Sections
 14. Reorder List Items
-15. Save Route
 
 ### Collaboration & Community
-16. Share List (Private)
-17. Invite User to Collaborate
-18. Chat with Collaborators
-19. Propose Changes
-20. Approve / Reject Changes
-21. Make List Public
-22. Browse Public Lists
-23. Rate a List
-24. Submit Place Review
+15. Invite User to Collaborate
+16. Chat with Collaborators
+17. Propose Changes
+18. Approve / Reject Changes
+19. Make List Public
+20. Browse Public Lists
+21. Rate a List
+22. Submit Place Review
 
 ---
 
@@ -105,8 +103,7 @@ rectangle "TripCentral" {
     usecase "Verify Email" as UC3
     usecase "View / Edit Profile" as UC4
     usecase "Search Users" as UC5
-    usecase "Send Friend Request" as UC6
-    usecase "Accept / Reject\nFriend Request" as UC7
+    usecase "Accept / Reject\nInvitation" as UC7
     usecase "Receive Notifications" as UC8
   }
 
@@ -114,14 +111,13 @@ rectangle "TripCentral" {
     usecase "Search Locations" as UC9
     usecase "View Location Details" as UC10
     usecase "Create List" as UC11
+    usecase "Delete List" as UC25
     usecase "Add Place to List" as UC12
     usecase "Manage List Sections" as UC13
     usecase "Reorder List Items" as UC14
-    usecase "Save Route" as UC15
   }
 
   package "Collaboration & Community" {
-    usecase "Share List (Private)" as UC16
     usecase "Invite User\nto Collaborate" as UC17
     usecase "Chat with\nCollaborators" as UC18
     usecase "Propose Changes" as UC19
@@ -148,16 +144,14 @@ Guest -- UC22
 AuthUser -- UC2
 AuthUser -- UC4
 AuthUser -- UC5
-AuthUser -- UC6
 AuthUser -- UC8
 AuthUser -- UC9
 AuthUser -- UC10
 AuthUser -- UC11
+AuthUser -- UC25
 AuthUser -- UC12
 AuthUser -- UC13
 AuthUser -- UC14
-AuthUser -- UC15
-AuthUser -- UC16
 AuthUser -- UC17
 AuthUser -- UC21
 AuthUser -- UC22
@@ -179,7 +173,6 @@ UC8 -- System
 UC11 ..> UC12 : <<include>>
 UC12 ..> UC9  : <<include>>
 UC17 ..> UC8  : <<include>>
-UC6  ..> UC8  : <<include>>
 
 ' ── <<extend>> Relationships ──────────────────────────
 UC1  ..> UC3  : <<extend>>
