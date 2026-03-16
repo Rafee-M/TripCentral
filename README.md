@@ -11,5 +11,8 @@ Social trip planning and collaboration app
 ## Documentation
 
 - Use Case Diagram (PlantUML): [docs/architecture/diagrams/use-case/tripcentral-use-case.puml](docs/architecture/diagrams/use-case/tripcentral-use-case.puml)
+- Use Case Diagram (SVG): [docs/architecture/diagrams/use-case/tripcentral-use-case.svg](docs/architecture/diagrams/use-case/tripcentral-use-case.svg)
 - Sequence Diagrams (Mermaid): [docs/architecture/diagrams/sequence/tripcentral-sequence-diagrams.md](docs/architecture/diagrams/sequence/tripcentral-sequence-diagrams.md)
+
+![TripCentral Use Case Diagram](docs/architecture/diagrams/use-case/tripcentral-use-case.svg)
 
