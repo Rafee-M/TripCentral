@@ -8,3 +8,8 @@ Social trip planning and collaboration app
 3. Md. Shahriar Rakib Rabbi 2321937642
 4. Tazreen Alam 2321506042
 
+## Documentation
+
+- Use Case Diagram (PlantUML): [docs/architecture/diagrams/use-case/tripcentral-use-case.puml](docs/architecture/diagrams/use-case/tripcentral-use-case.puml)
+- Sequence Diagrams (Mermaid): [docs/architecture/diagrams/sequence/tripcentral-sequence-diagrams.md](docs/architecture/diagrams/sequence/tripcentral-sequence-diagrams.md)
+
