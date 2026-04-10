@@ -1,18 +1,17 @@
-# TripCentral
-Social trip planning and collaboration app
+# trip_central
 
+A new Flutter project.
 
-# Members:
-1. Faiyad Tanjeem Hoque 2322415042
-2. Rafee Maisoon 2323012042
-3. Md. Shahriar Rakib Rabbi 2321937642
-4. Tazreen Alam 2321506042
+## Getting Started
 
-## Documentation
+This project is a starting point for a Flutter application.
 
-- Use Case Diagram (PlantUML): [docs/architecture/diagrams/use-case/tripcentral-use-case.puml](docs/architecture/diagrams/use-case/tripcentral-use-case.puml)
-- Use Case Diagram (SVG): [docs/architecture/diagrams/use-case/tripcentral-use-case.svg](docs/architecture/diagrams/use-case/tripcentral-use-case.svg)
-- Sequence Diagrams (Mermaid): [docs/architecture/diagrams/sequence/tripcentral-sequence-diagrams.md](docs/architecture/diagrams/sequence/tripcentral-sequence-diagrams.md)
+A few resources to get you started if this is your first Flutter project:
 
-![TripCentral Use Case Diagram](docs/architecture/diagrams/use-case/tripcentral-use-case.svg)
+- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
 
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
