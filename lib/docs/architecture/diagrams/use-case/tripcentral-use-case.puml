@@ -1,0 +1,139 @@
+@startuml
+left to right direction
+scale 1.35
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam ArrowThickness 1.2
+skinparam defaultFontSize 14
+skinparam usecaseFontSize 12
+skinparam actorFontSize 14
+skinparam nodesep 28
+skinparam ranksep 70
+
+skinparam usecaseBackgroundColor White
+skinparam usecaseBorderColor Black
+skinparam rectangleBorderColor Black
+skinparam rectangleBackgroundColor White
+skinparam packageBorderColor Black
+skinparam packageBackgroundColor #FAFAFA
+skinparam arrowColor #222222
+skinparam actorBorderColor Black
+skinparam actorBackgroundColor White
+
+' =========================
+' ACTORS
+' =========================
+actor "Guest" as Guest
+actor "Authenticated\nUser" as AuthUser
+actor "Collaborator" as Collaborator
+actor "Senior\nCollaborator" as SeniorCollab
+actor "Junior\nCollaborator" as JuniorCollab
+actor "System" as System
+
+' Actor hierarchy
+Collaborator --|> AuthUser
+SeniorCollab --|> Collaborator
+JuniorCollab --|> Collaborator
+
+' =========================
+' SYSTEM BOUNDARY
+' =========================
+rectangle "TripCentral" {
+
+  package "User Management & Socials" as P1 {
+    usecase "Sign Up" as UC_SignUp
+    usecase "Log In" as UC_Login
+    usecase "Verify Email" as UC_VerifyEmail
+    usecase "Verify Password" as UC_VerifyPwd
+    usecase "View / Edit Profile" as UC_Profile
+    usecase "Search Users" as UC_SearchUsers
+    usecase "Accept / Reject\nInvitation" as UC_InviteAction
+    usecase "Receive Notifications" as UC_Notifications
+  }
+
+  package "Mapping & Lists" as P2 {
+    usecase "Search Locations" as UC_SearchLocations
+    usecase "View Location Details" as UC_ViewLocation
+    usecase "Create List" as UC_CreateList
+    usecase "Edit List" as UC_EditList
+    usecase "Delete List" as UC_DeleteList
+    usecase "Add Place to List" as UC_AddPlace
+    usecase "Manage List Sections" as UC_Sections
+    usecase "Reorder List Items" as UC_Reorder
+  }
+
+  package "Collaboration & Community" as P3 {
+    usecase "Invite User\nto Collaborate" as UC_InviteCollaborator
+    usecase "Chat with\nCollaborators" as UC_Chat
+    usecase "Propose Changes" as UC_Propose
+    usecase "Approve / Reject\nChanges" as UC_ApproveReject
+    usecase "Change Collaborator\nPermission" as UC_ChangePerm
+    usecase "Remove\nCollaborator" as UC_RemoveCollaborator
+    usecase "Make List Public" as UC_MakePublic
+    usecase "Browse Public Lists" as UC_BrowsePublic
+    usecase "Rate a List" as UC_RateList
+    usecase "Submit Review" as UC_SubmitReview
+    usecase "Delete Review" as UC_DeleteReview
+  }
+}
+
+' =========================
+' ASSOCIATIONS (minimal and clean)
+' =========================
+
+' Guest
+Guest -right-> UC_SignUp
+Guest -right-> UC_Login
+Guest -right-> UC_ViewLocation
+Guest -right-> UC_BrowsePublic
+
+' Authenticated User (base user capabilities)
+AuthUser -right-> UC_Login
+AuthUser -right-> UC_Profile
+AuthUser -right-> UC_SearchUsers
+AuthUser -right-> UC_Notifications
+AuthUser -right-> UC_SearchLocations
+AuthUser -right-> UC_ViewLocation
+AuthUser -right-> UC_CreateList
+AuthUser -right-> UC_EditList
+AuthUser -right-> UC_DeleteList
+AuthUser -right-> UC_AddPlace
+AuthUser -right-> UC_Sections
+AuthUser -right-> UC_Reorder
+AuthUser -right-> UC_InviteCollaborator
+AuthUser -right-> UC_ChangePerm
+AuthUser -right-> UC_RemoveCollaborator
+AuthUser -right-> UC_MakePublic
+AuthUser -right-> UC_BrowsePublic
+AuthUser -right-> UC_RateList
+AuthUser -right-> UC_SubmitReview
+
+' Collaborator-specific
+Collaborator -right-> UC_InviteAction
+Collaborator -right-> UC_Notifications
+Collaborator -right-> UC_Chat
+
+' Senior Collaborator extra powers
+SeniorCollab -right-> UC_Propose
+SeniorCollab -right-> UC_ApproveReject
+
+' System validations/automations
+System -left-> UC_VerifyEmail
+System -left-> UC_VerifyPwd
+System -left-> UC_Notifications
+System -left-> UC_DeleteReview
+
+' =========================
+' INCLUDE / EXTEND
+' =========================
+UC_CreateList ..> UC_AddPlace : <<include>>
+UC_AddPlace ..> UC_SearchLocations : <<include>>
+UC_InviteCollaborator ..> UC_Notifications : <<include>>
+UC_SubmitReview ..> UC_DeleteReview : <<include>>
+
+UC_SignUp ..> UC_VerifyEmail : <<extend>>
+UC_Login ..> UC_VerifyPwd : <<extend>>
+UC_Propose ..> UC_ApproveReject : <<extend>>
+@enduml
