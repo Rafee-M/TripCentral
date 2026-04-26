@@ -19,7 +19,7 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: tabs.map((tab) => tab.pageBuilder(context)).toList(),
+        children: tabs.map((tab) => tab.pageBuilder()).toList(),
       ),
       bottomNavigationBar: NavigationBar(
         elevation: 3,
