@@ -19,10 +19,9 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: tabs.map((tab) => tab.pageBuilder()).toList(),
+        children: tabs.map((tab) => tab.pageBuilder(context)).toList(),
       ),
       bottomNavigationBar: NavigationBar(
-        height: 76,
         elevation: 3,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         selectedIndex: _selectedIndex,
@@ -31,33 +30,15 @@ class _AppShellState extends State<AppShell> {
             _selectedIndex = index;
           });
         },
-        destinations: const <NavigationDestination>[
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.list_alt_outlined),
-            selectedIcon: Icon(Icons.list_alt_rounded),
-            label: 'Lists',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map_rounded),
-            label: 'Map',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.forum_outlined),
-            selectedIcon: Icon(Icons.forum_rounded),
-            label: 'Social',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
-          ),
-        ],
+        destinations: tabs
+            .map(
+              (tab) => NavigationDestination(
+                icon: Icon(tab.icon),
+                selectedIcon: Icon(tab.selectedIcon),
+                label: tab.title,
+              ),
+            )
+            .toList(),
       ),
     );
   }
