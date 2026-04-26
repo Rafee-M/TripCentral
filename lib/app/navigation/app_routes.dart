@@ -1,10 +1,8 @@
 import 'package:flutter/widgets.dart';
 
+import '../../features/auth/login_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/lists/lists_page.dart';
-import '../../features/map/map_page.dart';
-import '../../features/profile/profile_page.dart';
-import '../../features/social/social_page.dart';
 import 'app_shell.dart';
 import 'placeholder_detail_page.dart';
 
@@ -13,10 +11,12 @@ class AppRoutes {
 
   static const String shell = '/';
   static const String detail = '/placeholder-detail';
+  static const String login = '/login';
 
   static Map<String, WidgetBuilder> get all => <String, WidgetBuilder>{
     shell: (_) => const AppShell(),
     detail: (_) => const PlaceholderDetailPage(),
+    login: (_) => const LoginPage(),
   };
 
   static const List<AppTabDefinition> tabs = <AppTabDefinition>[
@@ -29,17 +29,6 @@ class AppRoutes {
       title: 'Lists',
       routeName: '/lists',
       pageBuilder: ListsPage.new,
-    ),
-    AppTabDefinition(title: 'Map', routeName: '/map', pageBuilder: MapPage.new),
-    AppTabDefinition(
-      title: 'Social',
-      routeName: '/social',
-      pageBuilder: SocialPage.new,
-    ),
-    AppTabDefinition(
-      title: 'Profile',
-      routeName: '/profile',
-      pageBuilder: ProfilePage.new,
     ),
   ];
 }

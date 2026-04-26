@@ -1,12 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../shared/empty_page_scaffold.dart';
-
-class MapPage extends StatelessWidget {
+class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
   @override
+  State<MapPage> createState() => _MapPageState();
+}
+
+class _MapPageState extends State<MapPage> {
+  static const CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
+  @override
   Widget build(BuildContext context) {
-    return const EmptyPageScaffold(title: 'Map');
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Map View'),
+      ),
+      body: const GoogleMap(
+        mapType: MapType.normal,
+        initialCameraPosition: _initialPosition,
+        myLocationEnabled: true,
+        indoorViewEnabled: true, // these properties often help with emulator GL bugs
+        trafficEnabled: false,
+      ),
+    );
   }
 }
