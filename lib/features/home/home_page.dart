@@ -1,15 +1,51 @@
 import 'package:flutter/material.dart';
 
 import '../map/map_page.dart';
+import '../../app/navigation/app_routes.dart';
+import '../../core/patterns/singleton/supabase_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
   Widget build(BuildContext context) {
+    final session = SupabaseService.instance.client.auth.currentSession;
+    final isLoggedIn = session != null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
+        actions: [
+          if (isLoggedIn)
+            TextButton.icon(
+              onPressed: () async {
+                await SupabaseService.instance.client.auth.signOut();
+                setState(() {}); // Refresh UI
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            )
+          else
+            TextButton.icon(
+              onPressed: () async {
+                await Navigator.pushNamed(context, AppRoutes.login);
+                setState(() {}); // Refresh UI so it detects login state
+              },
+              icon: const Icon(Icons.login),
+              label: const Text('Login'),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
