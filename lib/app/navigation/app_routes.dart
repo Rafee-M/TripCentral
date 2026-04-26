@@ -2,9 +2,6 @@ import 'package:flutter/widgets.dart';
 
 import '../../features/home/home_page.dart';
 import '../../features/lists/lists_page.dart';
-import '../../features/map/map_page.dart';
-import '../../features/profile/profile_page.dart';
-import '../../features/social/social_page.dart';
 import 'app_shell.dart';
 import 'placeholder_detail_page.dart';
 
@@ -29,17 +26,6 @@ class AppRoutes {
       title: 'Lists',
       routeName: '/lists',
       pageBuilder: ListsPage.new,
-    ),
-    AppTabDefinition(title: 'Map', routeName: '/map', pageBuilder: MapPage.new),
-    AppTabDefinition(
-      title: 'Social',
-      routeName: '/social',
-      pageBuilder: SocialPage.new,
-    ),
-    AppTabDefinition(
-      title: 'Profile',
-      routeName: '/profile',
-      pageBuilder: ProfilePage.new,
     ),
   ];
 }
