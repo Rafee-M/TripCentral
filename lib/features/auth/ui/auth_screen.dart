@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../strategies/auth_strategy.dart';
+import '../../home/ui/home_screen.dart';
 
 enum AuthMode { login, signUp }
 
@@ -76,7 +77,11 @@ class _AuthScreenState extends State<AuthScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged in successfully!')),
         );
-        // NOTE: Navigator logic to home screen goes here
+
+        // Push Replacement directly to HomeScreen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
       }
     } on AuthException catch (e) {
       if (!mounted) return;
