@@ -1023,3 +1023,60 @@ Future<List<Map<String, dynamic>>> fetchMessages(
 void unsubscribe() => _channel.unsubscribe();
 ```
 You’ll need to call `supabase.storage.from(bucket).createSignedUrl(path)` in the UI. The AI agent should be told about that.
+
+CREATE TABLE public.chat_rooms (
+id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+name                TEXT NOT NULL,
+description         TEXT,                               -- Room description
+avatar_url          TEXT,                               -- Room profile picture
+is_private          BOOLEAN DEFAULT false,
+pinned_message_id   UUID,                               -- Added: Reference for a pinned message
+created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+created_by          UUID REFERENCES public.profiles(id) ON DELETE SET NULL
+);
+
+-- Note: We add the Foreign Key constraint AFTER chat_messages is created
+-- to avoid a circular reference error during initial table creation.
+
+CREATE TABLE public.chat_messages (
+id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+chat_room_id        UUID REFERENCES public.chat_rooms(id) ON DELETE CASCADE,
+user_id             UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+reply_to_message_id UUID REFERENCES public.chat_messages(id) ON DELETE SET NULL,
+content             TEXT NOT NULL,
+type                public.chat_message_type NOT NULL DEFAULT 'text',
+created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+deleted_at          TIMESTAMPTZ DEFAULT NULL            -- Added: For soft deletes
+);
+
+-- Indexing for high-performance retrieval
+CREATE INDEX idx_chat_messages_room_history ON public.chat_messages(chat_room_id, created_at DESC);
+CREATE INDEX idx_chat_messages_reply_lookup ON public.chat_messages(reply_to_message_id);
+
+-- Link the pinned_message_id back now that the table exists
+ALTER TABLE public.chat_rooms
+ADD CONSTRAINT fk_pinned_message
+FOREIGN KEY (pinned_message_id) REFERENCES public.chat_messages(id) ON DELETE SET NULL;
+
+CREATE TABLE public.chat_room_members (
+chat_room_id  UUID REFERENCES public.chat_rooms(id) ON DELETE CASCADE,
+user_id       UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+permission    public.trip_permission DEFAULT 'viewer',
+joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+last_read_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),    -- Added: Read receipt tracking
+PRIMARY KEY (chat_room_id, user_id)
+);
+
+-- Trigger for Rooms
+CREATE TRIGGER set_chat_rooms_updated_at
+BEFORE UPDATE ON public.chat_rooms
+FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+-- Trigger for Messages
+CREATE TRIGGER set_chat_messages_updated_at
+BEFORE UPDATE ON public.chat_messages
+FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
+  

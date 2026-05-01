@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:trip_central/features/trips/ui/add_location_map_screen.dart';
+import 'package:trip_central/features/chat/ui/chat_screen.dart';
+import 'package:trip_central/features/trips/ui/invite_user_dialog.dart';
 
 class TripListDetailScreen extends StatefulWidget {
   final Map<String, dynamic> tripList;
@@ -53,11 +55,104 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
     }
   }
 
+  Future<void> _openChat() async {
+    final tripListId = widget.tripList['id'];
+    try {
+      // 1. Check if there are any collaborators for this trip
+      final collabRes = await Supabase.instance.client
+          .from('trip_list_collaborators')
+          .select('user_id')
+          .eq('trip_list_id', tripListId);
+
+      if (collabRes.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No collaborators. Please invite users using the + icon first.')));
+        return;
+      }
+
+      // 2. Check if a chat room already exists
+      final res = await Supabase.instance.client
+          .from('chat_rooms')
+          .select()
+          .eq('name', widget.tripList['title']) // Using title to link name
+          .maybeSingle();
+
+      String roomId;
+
+      if (res == null) {
+        // 3. Create the chat room if it doesn't exist
+        final newRoom = await Supabase.instance.client
+            .from('chat_rooms')
+            .insert({
+              'name': widget.tripList['title'],
+              'description': tripListId, // Keeping reference
+              'created_by': Supabase.instance.client.auth.currentUser!.id
+            })
+            .select()
+            .single();
+
+        roomId = newRoom['id'];
+
+        // Add the creator
+        final membersToInsert = <Map<String, dynamic>>[
+          {
+            'chat_room_id': roomId,
+            'user_id': Supabase.instance.client.auth.currentUser!.id,
+          }
+        ];
+
+        // Add all collaborators
+        for (final c in collabRes) {
+          if (c['user_id'] != Supabase.instance.client.auth.currentUser!.id) {
+            membersToInsert.add({
+              'chat_room_id': roomId,
+              'user_id': c['user_id'],
+            });
+          }
+        }
+
+        await Supabase.instance.client.from('chat_room_members').insert(membersToInsert);
+
+      } else {
+        roomId = res['id'];
+      }
+
+      if (mounted) {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(
+          roomId: roomId,
+          tripListId: tripListId,
+          title: '${widget.tripList['title']} Chat',
+        )));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.tripList['title'] ?? 'Trip Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add),
+            tooltip: 'Invite Users',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => InviteUserDialog(tripListId: widget.tripList['id']),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.chat),
+            tooltip: 'Open Chat',
+            onPressed: _openChat,
+          )
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -93,4 +188,3 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
     );
   }
 }
-
