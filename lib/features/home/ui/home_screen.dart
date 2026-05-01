@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip_central/shared/models/trip_list.dart';
 import 'package:trip_central/features/trips/services/trip_service.dart';
+import 'package:trip_central/features/trips/ui/trip_list_detail_screen.dart';
 import 'package:intl/intl.dart';
 
 import '../../trips/ui/create_trip_screen.dart';
@@ -211,7 +212,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           trailing: const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
           onTap: () {
-            // TODO: Route to future detailed TripList Screen internally
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TripListDetailScreen(
+                  tripList: {
+                    'id': trip.id,
+                    'title': trip.title,
+                  },
+                ),
+              ),
+            );
           },
         );
       },

@@ -3,6 +3,9 @@
         android:label="trip_central"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAmbSEVUYmDoarTb8wMEE_oYoMACImizEo"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
