@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../strategies/auth_strategy.dart';
-import '../../home/ui/home_screen.dart';
+import '../../main/ui/main_navigation_screen.dart';
 
 enum AuthMode { login, signUp }
 
@@ -80,7 +80,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
         // Push Replacement directly to HomeScreen
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
         );
       }
     } on AuthException catch (e) {

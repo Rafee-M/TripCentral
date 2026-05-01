@@ -35,8 +35,8 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final res = await _supabase
           .from('chat_messages')
-          .select('*, profiles:sender_id(username)')
-          .eq('room_id', widget.roomId)
+          .select('*, profiles:user_id(username)')
+          .eq('chat_room_id', widget.roomId)
           .order('created_at', ascending: false)
           .limit(50);
       setState(() {
@@ -58,7 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
           table: 'chat_messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'room_id',
+            column: 'chat_room_id',
             value: widget.roomId,
           ),
           callback: (payload) {
@@ -83,9 +83,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       await _supabase.from('chat_messages').insert({
-        'room_id': widget.roomId,
-        'trip_list_id': widget.tripListId,
-        'sender_id': _supabase.auth.currentUser!.id,
+        'chat_room_id': widget.roomId,
+        'user_id': _supabase.auth.currentUser!.id,
         'content': text,
       });
     } catch (e) {
@@ -108,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
-                      final isMe = msg['sender_id'] == _supabase.auth.currentUser?.id;
+                      final isMe = msg['user_id'] == _supabase.auth.currentUser?.id;
                       final username = msg['profiles']?['username'] ?? 'User';
 
                       return Align(
@@ -156,4 +155,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-

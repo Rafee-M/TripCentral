@@ -24,13 +24,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await _supabase
-          .from('chat_rooms')
-          .select('*, trip_lists(title)')
-          // Usually we'd want to check if we can access the trip, but Supabase RLS handles it
-          .order('created_at', ascending: false);
+          .from('chat_room_members')
+          .select('chat_rooms(*)')
+          .eq('user_id', _supabase.auth.currentUser!.id);
+
+      final mappedRooms = response.map((e) => e['chat_rooms']).where((e) => e != null).toList();
 
       setState(() {
-        _chatRooms = response;
+        _chatRooms = mappedRooms;
         _isLoading = false;
       });
     } catch (e) {
@@ -54,7 +55,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   itemCount: _chatRooms.length,
                   itemBuilder: (context, index) {
                     final room = _chatRooms[index];
-                    final title = room['trip_lists']?['title'] ?? 'Trip Chat';
+                    final title = room['name'] ?? 'Chat Group';
                     return ListTile(
                       leading: const CircleAvatar(child: Icon(Icons.chat)),
                       title: Text(title),
@@ -65,7 +66,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           MaterialPageRoute(
                             builder: (_) => ChatScreen(
                               roomId: room['id'],
-                              tripListId: room['trip_list_id'],
+                              tripListId: room['id'], // using room id as placeholder if it is generic
                               title: title,
                             ),
                           ),

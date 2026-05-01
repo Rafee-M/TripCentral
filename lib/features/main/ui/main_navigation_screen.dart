@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trip_central/features/home/ui/home_screen.dart'; // Which currently has the lists
 import 'package:trip_central/features/chat/ui/chat_list_screen.dart';
+import 'package:trip_central/features/trips/ui/pending_invitations_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -41,7 +42,18 @@ class GenericHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(
+        title: const Text('Home'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            tooltip: 'Pending Invitations',
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const PendingInvitationsScreen()));
+            },
+          )
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
