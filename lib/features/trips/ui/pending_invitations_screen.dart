@@ -24,7 +24,7 @@ class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
     try {
       final res = await _supabase
           .from('trip_list_invitations')
-          .select('id, status, trip_list_id, trip:trip_lists(title), inviter:profiles!invited_by(display_name, username)')
+          .select('id, status, trip_list_id, trip_lists(title), profiles!invited_by(display_name, username)')
           .eq('invited_user_id', _supabase.auth.currentUser!.id)
           .eq('status', 'pending');
 
@@ -68,8 +68,8 @@ class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
                   itemCount: _invitations.length,
                   itemBuilder: (context, index) {
                     final invite = _invitations[index];
-                    final tripTitle = invite['trip']?['title'] ?? 'Unknown Trip';
-                    final inviterName = invite['inviter']?['display_name'] ?? invite['inviter']?['username'] ?? 'Someone';
+                    final tripTitle = invite['trip_lists']?['title'] ?? 'Unknown Trip';
+                    final inviterName = invite['profiles']?['display_name'] ?? invite['profiles']?['username'] ?? 'Someone';
 
                     return ListTile(
                       leading: const Icon(Icons.mail),
@@ -85,4 +85,3 @@ class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
     );
   }
 }
-
