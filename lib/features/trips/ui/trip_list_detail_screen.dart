@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:trip_central/features/trips/ui/add_location_map_screen.dart';
+import 'package:trip_central/features/trips/ui/location_detail_screen.dart';
 import 'package:trip_central/features/chat/ui/chat_screen.dart';
 import 'package:trip_central/features/trips/ui/invite_user_dialog.dart';
 
@@ -15,30 +16,42 @@ class TripListDetailScreen extends StatefulWidget {
 
 class _TripListDetailScreenState extends State<TripListDetailScreen> {
   List<dynamic> _locations = [];
+  List<dynamic> _notes = [];
   bool _isLoading = true;
+
+  // Box Expansion States
+  bool _isLocationsExpanded = true;
+  bool _isNotesExpanded = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchLocations();
+    _fetchData();
   }
 
-  Future<void> _fetchLocations() async {
+  Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
-      final response = await Supabase.instance.client
+      final locResponse = await Supabase.instance.client
           .from('trip_locations')
+          .select()
+          .eq('trip_list_id', widget.tripList['id'])
+          .order('order_index', ascending: true);
+
+      final notesResponse = await Supabase.instance.client
+          .from('trip_notes')
           .select()
           .eq('trip_list_id', widget.tripList['id'])
           .order('created_at', ascending: true);
 
       setState(() {
-        _locations = response as List<dynamic>;
+        _locations = locResponse as List<dynamic>;
+        _notes = notesResponse as List<dynamic>;
       });
     } on PostgrestException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -48,7 +61,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .from('trip_locations')
           .delete()
           .eq('id', locationId);
-      _fetchLocations();
+      _fetchData();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location deleted')));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete')));
@@ -131,9 +144,33 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
     }
   }
 
+  Future<void> _showLocationDetails(Map<String, dynamic> loc) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocationDetailScreen(location: loc),
+      ),
+    );
+    if (result == true) {
+      _fetchData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Dynamic layout Flex allocation logic
+    int locFlex = _isLocationsExpanded ? 1 : 0;
+    int notesFlex = _isNotesExpanded ? 1 : 0;
+
+    // Safefall to prevent screen crush
+    if (!(_isLocationsExpanded || _isNotesExpanded)) {
+       locFlex = 1;
+    }
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Text(widget.tripList['title'] ?? 'Trip Details'),
         actions: [
@@ -156,22 +193,59 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _locations.isEmpty
-              ? const Center(child: Text("No locations added yet."))
-              : ListView.builder(
-                  itemCount: _locations.length,
-                  itemBuilder: (context, index) {
-                    final loc = _locations[index];
-                    return ListTile(
-                      title: Text(loc['name'] ?? 'Unknown'),
-                      subtitle: Text('Lat: ${loc['latitude']}, Lng: ${loc['longitude']}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteLocation(loc['id']),
-                      ),
-                    );
-                  },
-                ),
+          : Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  _buildCollapsibleBox(
+                    title: 'Locations',
+                    isExpanded: _isLocationsExpanded,
+                    flex: locFlex,
+                    onToggle: () => setState(() => _isLocationsExpanded = !_isLocationsExpanded),
+                    theme: theme,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: _locations.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final loc = _locations[index];
+                        return ListTile(
+                          leading: Icon(Icons.place, color: theme.colorScheme.primary),
+                          title: Text(loc['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(loc['address'] ?? 'Lat: ${loc['latitude']}, Lng: ${loc['longitude']}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                          onTap: () => _showLocationDetails(loc),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            onPressed: () => _deleteLocation(loc['id']),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCollapsibleBox(
+                    title: 'Notes',
+                    isExpanded: _isNotesExpanded,
+                    flex: notesFlex,
+                    onToggle: () => setState(() => _isNotesExpanded = !_isNotesExpanded),
+                    theme: theme,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: _notes.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final note = _notes[index];
+                        return ListTile(
+                          leading: Icon(Icons.note, color: theme.colorScheme.tertiary),
+                          title: Text(note['title'] ?? 'Untitled'),
+                          onTap: () { /* Future Note Details Screen */ },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
@@ -180,10 +254,61 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
               builder: (context) => AddLocationMapScreen(tripListId: widget.tripList['id']),
             ),
           );
-          _fetchLocations(); // Refresh after adding
+          _fetchData(); // Refresh after adding
         },
         label: const Text('Add Location'),
         icon: const Icon(Icons.add_location_alt),
+      ),
+    );
+  }
+
+  Widget _buildCollapsibleBox({
+    required String title,
+    required bool isExpanded,
+    required int flex,
+    required VoidCallback onToggle,
+    required ThemeData theme,
+    required Widget child,
+  }) {
+    final header = InkWell(
+      onTap: onToggle,
+      borderRadius: isExpanded ? const BorderRadius.vertical(top: Radius.circular(16)) : BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+
+    final boxDecoration = BoxDecoration(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      border: Border.all(color: theme.colorScheme.outlineVariant),
+      borderRadius: BorderRadius.circular(16),
+    );
+
+    if (!isExpanded) {
+      return Container(
+        decoration: boxDecoration,
+        child: header,
+      );
+    }
+
+    return Expanded(
+      flex: flex,
+      child: Container(
+        decoration: boxDecoration,
+        child: Column(
+          children: [
+            header,
+            const Divider(height: 1),
+            Expanded(child: child),
+          ],
+        ),
       ),
     );
   }
