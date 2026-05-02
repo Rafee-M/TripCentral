@@ -23,6 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   ViewMode _currentViewMode = ViewMode.simpleList;
   SortMode _currentSortMode = SortMode.date;
 
+  // State for Calendar View
+  DateTime _focusedDate = DateTime.now();
+
   List<TripList> _trips = [];
   bool _isLoading = true;
 
@@ -136,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? const Center(child: CircularProgressIndicator())
                     : _trips.isEmpty
                         ? _buildEmptyState(theme)
-                        : _buildSimpleListView(),
+                        : _buildCurrentView(),
               ),
             ],
           ),
@@ -186,6 +189,257 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Strategy Pattern Delegate
+  Widget _buildCurrentView() {
+    switch (_currentViewMode) {
+      case ViewMode.calendar:
+        return _buildCalendarView();
+      case ViewMode.cards:
+        // TODO: cards view, fallback to simple list for now
+        return _buildSimpleListView();
+      case ViewMode.simpleList:
+      default:
+        return _buildSimpleListView();
+    }
+  }
+
+  // Custom minimal logic for elegant Calendar view
+  Widget _buildCalendarView() {
+    final theme = Theme.of(context);
+    final daysInMonth = DateUtils.getDaysInMonth(_focusedDate.year, _focusedDate.month);
+    final firstDayOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
+    // get short weekday (1 = Monday, 7 = Sunday)
+    final firstDayOffset = firstDayOfMonth.weekday % 7;
+
+    // Create map of days to trips mapping for fast lookups
+    final Map<int, List<TripList>> dailyTrips = {};
+    for (var trip in _trips) {
+      if (trip.startDate != null &&
+          trip.startDate!.year == _focusedDate.year &&
+          trip.startDate!.month == _focusedDate.month) {
+
+        // Populate days between start and end date, or just start date
+        int startDay = trip.startDate!.day;
+        int endDay = trip.endDate != null && trip.endDate!.month == _focusedDate.month ? trip.endDate!.day : startDay;
+
+        for (int i = startDay; i <= endDay; i++) {
+          dailyTrips.putIfAbsent(i, () => []).add(trip);
+        }
+      }
+    }
+
+    final monthName = DateFormat('MMMM').format(firstDayOfMonth);
+
+    return Column(
+      children: [
+        // Month / Year Selector Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            InkWell(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _focusedDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  initialDatePickerMode: DatePickerMode.year,
+                );
+                if (picked != null) {
+                  setState(() => _focusedDate = picked);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '$monthName ${_focusedDate.year}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () {
+                    setState(() {
+                      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1, 1);
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () {
+                    setState(() {
+                      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1, 1);
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Weekdays Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) {
+            return Expanded(
+              child: Center(
+                child: Text(
+                  day,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        // Calendar Grid
+        Expanded(
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7, // 7 days in a week
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+            ),
+            itemCount: daysInMonth + firstDayOffset,
+            itemBuilder: (context, index) {
+              if (index < firstDayOffset) {
+                return const SizedBox.shrink(); // Empty offset blocks
+              }
+
+              int day = index - firstDayOffset + 1;
+              final dayTrips = dailyTrips[day] ?? [];
+              final isToday = day == DateTime.now().day &&
+                              _focusedDate.year == DateTime.now().year &&
+                              _focusedDate.month == DateTime.now().month;
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  if (dayTrips.isEmpty) return;
+                  if (dayTrips.length == 1) {
+                    // Navigate directly to exact list
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TripListDetailScreen(
+                          tripList: {
+                            'id': dayTrips.first.id,
+                            'title': dayTrips.first.title,
+                          },
+                        ),
+                      ),
+                    );
+                  } else {
+                    // Show a bottom sheet or a temporary List Screen
+                    _showDayTripsModal(context, dayTrips, day);
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isToday ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isToday ? Border.all(color: theme.colorScheme.primary) : null,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        '$day',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                          color: isToday ? theme.colorScheme.primary : null,
+                        ),
+                      ),
+                      // Dot or count indicator if there are events
+                      if (dayTrips.isNotEmpty)
+                        Positioned(
+                          bottom: 4,
+                          child: dayTrips.length == 1
+                            ? Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF2B8B5), // Elegant pastel red
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            : Text(
+                                '${dayTrips.length}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFF2B8B5), // Elegant pastel red
+                                ),
+                              ),
+                        )
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDayTripsModal(BuildContext context, List<TripList> dayTrips, int day) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Trips on $day ${DateFormat('MMMM').format(_focusedDate)}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: dayTrips.length,
+                  separatorBuilder: (context, _) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final trip = dayTrips[index];
+                    return ListTile(
+                      title: Text(trip.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      trailing: const Icon(Icons.chevron_right, size: 16),
+                      onTap: () {
+                        Navigator.pop(context); // close modal
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TripListDetailScreen(
+                              tripList: {
+                                'id': trip.id,
+                                'title': trip.title,
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              )
+            ],
+          ),
+        );
+      },
     );
   }
 

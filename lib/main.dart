@@ -9,7 +9,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
-  // 2. Read variables from memory
+  //Read variables from memory after loaded by pubsec.yaml assets
   final supabaseUrl = dotenv.get('SUPABASE_URL');
   final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY');
 
