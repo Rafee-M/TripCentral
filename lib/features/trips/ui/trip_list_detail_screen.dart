@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:trip_central/features/trips/ui/add_location_map_screen.dart';
 import 'package:trip_central/features/trips/ui/location_detail_screen.dart';
 import 'package:trip_central/features/chat/ui/chat_screen.dart';
-import 'package:trip_central/features/trips/ui/invite_user_dialog.dart';
+import 'package:trip_central/features/trips/ui/trip_collaborators_screen.dart';
 
 class TripListDetailScreen extends StatefulWidget {
   final Map<String, dynamic> tripList;
@@ -18,6 +18,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
   List<dynamic> _locations = [];
   List<dynamic> _notes = [];
   bool _isLoading = true;
+  bool _isOwner = false;
 
   // Box Expansion States
   bool _isLocationsExpanded = true;
@@ -32,6 +33,12 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
   Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
+      final tripRes = await Supabase.instance.client
+          .from('trip_lists')
+          .select('owner_id')
+          .eq('id', widget.tripList['id'])
+          .single();
+
       final locResponse = await Supabase.instance.client
           .from('trip_locations')
           .select()
@@ -45,6 +52,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .order('created_at', ascending: true);
 
       setState(() {
+        _isOwner = tripRes['owner_id'] == Supabase.instance.client.auth.currentUser?.id;
         _locations = locResponse as List<dynamic>;
         _notes = notesResponse as List<dynamic>;
       });
@@ -156,6 +164,37 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
     }
   }
 
+  Future<void> _deleteTrip() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Trip'),
+        content: const Text('Are you sure you want to delete this entire trip? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await Supabase.instance.client
+          .from('trip_lists')
+          .delete()
+          .eq('id', widget.tripList['id']);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip deleted successfully')));
+        Navigator.pop(context, true); 
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete trip: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -174,13 +213,21 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
       appBar: AppBar(
         title: Text(widget.tripList['title'] ?? 'Trip Details'),
         actions: [
+          if (_isOwner)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: 'Delete Trip',
+              onPressed: _deleteTrip,
+            ),
           IconButton(
-            icon: const Icon(Icons.person_add),
-            tooltip: 'Invite Users',
+            icon: const Icon(Icons.person),
+            tooltip: 'Collaborators',
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => InviteUserDialog(tripListId: widget.tripList['id']),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TripCollaboratorsScreen(tripListId: widget.tripList['id']),
+                ),
               );
             },
           ),
