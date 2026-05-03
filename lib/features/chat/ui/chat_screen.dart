@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:trip_central/features/trips/ui/trip_list_detail_screen.dart';
+import 'package:trip_central/features/trips/ui/trip_collaborators_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String roomId;
@@ -96,7 +98,38 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TripListDetailScreen(
+                  tripList: {
+                    'id': widget.tripListId,
+                    'title': widget.title.replaceAll(' Chat', ''),
+                  },
+                ),
+              ),
+            );
+          },
+          child: Text(widget.title),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'Collaborators',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TripCollaboratorsScreen(tripListId: widget.tripListId),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(

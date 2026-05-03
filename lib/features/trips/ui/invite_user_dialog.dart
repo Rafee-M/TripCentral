@@ -15,6 +15,7 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
   final _supabase = Supabase.instance.client;
   List<dynamic> _searchResults = [];
   bool _isSearching = false;
+  String _selectedPermission = 'viewer';
 
   Future<void> _searchUsers(String query) async {
     if (query.isEmpty) {
@@ -61,6 +62,7 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         'trip_list_id': widget.tripListId,
         'invited_by': _supabase.auth.currentUser!.id,
         'invited_user_id': targetUserId,
+        'permission': _selectedPermission,
         'status': 'pending',
       });
 
@@ -83,7 +85,27 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         width: double.maxFinite,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                const Text('Role: '),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _selectedPermission,
+                  items: const [
+                    DropdownMenuItem(value: 'viewer', child: Text('Viewer')),
+                    DropdownMenuItem(value: 'editor', child: Text('Editor')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedPermission = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -96,7 +118,7 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
               onSubmitted: _searchUsers,
             ),
             const SizedBox(height: 10),
-            if (_isSearching) const CircularProgressIndicator(),
+            if (_isSearching) const Center(child: CircularProgressIndicator()),
             if (!_isSearching && _searchResults.isNotEmpty)
               Expanded(
                 child: ListView.builder(
