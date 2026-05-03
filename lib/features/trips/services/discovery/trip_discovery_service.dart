@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../adapters/trip_discovery_adapter.dart';
 import '../../models/discover_trip_card.dart';
+import '../../../../shared/models/trip_review.dart';
 import 'trip_discovery_filter_strategy.dart';
 import 'trip_discovery_sort_strategy.dart';
 import 'trip_discovery_service_types.dart';
@@ -50,6 +51,7 @@ class TripDiscoveryService {
       final tripIds = rawTrips.map((e) => e['id'].toString()).toList();
 
       final ratingsByTripId = await _fetchRatingsByTripId(tripIds);
+      final myReviewsByTripId = await _fetchMyReviewsByTripId(tripIds);
       final locationsByTripId = await _fetchLocationsByTripId(tripIds);
 
       final cards = rawTrips
@@ -57,7 +59,9 @@ class TripDiscoveryService {
             (trip) => TripDiscoveryAdapter.fromDatabase(
               trip: trip,
               ratingsByTripId: ratingsByTripId,
+              myReviewsByTripId: myReviewsByTripId,
               locationsByTripId: locationsByTripId,
+              currentUserId: userId,
             ),
           )
           .toList();
@@ -96,6 +100,74 @@ class TripDiscoveryService {
     return <String, Map<String, dynamic>>{
       for (final row in rows) row['trip_list_id'].toString(): row,
     };
+  }
+
+  Future<Map<String, Map<String, dynamic>>> _fetchMyReviewsByTripId(
+    List<String> tripIds,
+  ) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null || tripIds.isEmpty) {
+      return <String, Map<String, dynamic>>{};
+    }
+
+    final res = await _supabase
+        .from('trip_list_reviews')
+        .select('trip_list_id, rating, review_text')
+        .eq('reviewer_id', userId)
+        .inFilter('trip_list_id', tripIds);
+
+    final rows = (res as List<dynamic>).cast<Map<String, dynamic>>();
+
+    return <String, Map<String, dynamic>>{
+      for (final row in rows) row['trip_list_id'].toString(): row,
+    };
+  }
+
+  Future<List<TripReview>> getTripReviews({required String tripListId}) async {
+    try {
+      final reviewsRes = await _supabase
+          .from('trip_list_reviews')
+          .select(
+            'id, trip_list_id, reviewer_id, rating, review_text, created_at, updated_at',
+          )
+          .eq('trip_list_id', tripListId)
+          .order('created_at', ascending: false);
+
+      final reviewRows = (reviewsRes as List<dynamic>)
+          .cast<Map<String, dynamic>>();
+      if (reviewRows.isEmpty) {
+        return <TripReview>[];
+      }
+
+      final reviewerIds = reviewRows
+          .map((row) => row['reviewer_id']?.toString())
+          .whereType<String>()
+          .toSet()
+          .toList();
+
+      final profilesRes = await _supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url')
+          .inFilter('id', reviewerIds);
+
+      final profileRows = (profilesRes as List<dynamic>)
+          .cast<Map<String, dynamic>>();
+      final profilesById = <String, Map<String, dynamic>>{
+        for (final row in profileRows) row['id'].toString(): row,
+      };
+
+      return reviewRows.map((row) {
+        final reviewer = profilesById[row['reviewer_id']?.toString()];
+        return TripReview.fromJson({
+          ...row,
+          'reviewer_username': reviewer?['username'],
+          'reviewer_display_name': reviewer?['display_name'],
+          'reviewer_avatar_url': reviewer?['avatar_url'],
+        });
+      }).toList();
+    } on PostgrestException {
+      rethrow;
+    }
   }
 
   Future<Map<String, List<String>>> _fetchLocationsByTripId(
@@ -163,7 +235,7 @@ class TripDiscoveryService {
         throw Exception('Failed to submit rating');
       }
 
-      return (res.first as Map<String, dynamic>)['id'].toString();
+      return res.first['id'].toString();
     } on PostgrestException catch (e) {
       // RLS violations will come through as PostgrestException
       if (e.code == '42501') {

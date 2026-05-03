@@ -17,7 +17,9 @@ class PublicTripFilterStrategy implements TripDiscoveryFilterStrategy {
   }) async {
     var req = supabase
         .from('trip_lists')
-        .select('id, title, cover_image_url, start_date, is_public, created_at')
+        .select(
+          'id, owner_id, title, cover_image_url, start_date, is_public, created_at',
+        )
         .eq('is_public', true)
         .isFilter('deleted_at', null);
 
@@ -44,7 +46,9 @@ class OwnTripFilterStrategy implements TripDiscoveryFilterStrategy {
 
     var req = supabase
         .from('trip_lists')
-        .select('id, title, cover_image_url, start_date, is_public, created_at')
+        .select(
+          'id, owner_id, title, cover_image_url, start_date, is_public, created_at',
+        )
         .eq('owner_id', userId)
         .isFilter('deleted_at', null);
 
@@ -86,7 +90,9 @@ class InvitedTripFilterStrategy implements TripDiscoveryFilterStrategy {
 
     var req = supabase
         .from('trip_lists')
-        .select('id, title, cover_image_url, start_date, is_public, created_at')
+        .select(
+          'id, owner_id, title, cover_image_url, start_date, is_public, created_at',
+        )
         .inFilter('id', ids)
         .isFilter('deleted_at', null);
 
