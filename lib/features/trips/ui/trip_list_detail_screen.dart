@@ -37,7 +37,13 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .from('trip_lists')
           .select('owner_id')
           .eq('id', widget.tripList['id'])
-          .single();
+          .maybeSingle();
+
+      if (tripRes == null) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip not found or access denied.')));
+        if (mounted) Navigator.pop(context);
+        return;
+      }
 
       final locResponse = await Supabase.instance.client
           .from('trip_locations')
