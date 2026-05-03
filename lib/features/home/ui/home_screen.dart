@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trip_central/shared/models/trip_list.dart';
 import 'package:trip_central/features/trips/services/trip_service.dart';
 import 'package:trip_central/features/trips/ui/trip_list_detail_screen.dart';
+import 'package:trip_central/features/settings/ui/settings_screen.dart';
 import 'package:trip_central/features/trips/ui/trip_discovery_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -134,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const TripDiscoveryScreen()),
+                MaterialPageRoute(builder: (_) => TripDiscoveryScreen()),
               );
             },
             tooltip: 'Search',
@@ -142,7 +143,11 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              /* TODO: Implement Settings */
+              // Opening Settings screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
             },
             tooltip: 'Settings',
           ),
