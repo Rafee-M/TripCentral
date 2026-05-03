@@ -6,6 +6,43 @@ import 'package:intl/intl.dart';
 
 import '../../trips/ui/create_trip_screen.dart';
 
+// --- Strategy Pattern for Sorting ---
+// Abstract strategy interface defining the contract for executing a sort
+abstract class TripSortStrategy {
+  void sort(List<TripList> trips);
+}
+
+// Concrete Strategy: Sorting alphabetically by Name
+class NameSortStrategy implements TripSortStrategy {
+  @override
+  void sort(List<TripList> trips) {
+    trips.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+  }
+}
+
+// Concrete Strategy: Sorting by Date (nearest upcoming first, nulls at end sorted by name)
+class DateSortStrategy implements TripSortStrategy {
+  @override
+  void sort(List<TripList> trips) {
+    trips.sort((a, b) {
+      if (a.startDate == null && b.startDate == null) {
+        return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+      } else if (a.startDate == null) {
+        return 1; // Push trips with no date to the bottom
+      } else if (b.startDate == null) {
+        return -1;
+      } else {
+        final dateCompare = a.startDate!.compareTo(b.startDate!);
+        if (dateCompare == 0) {
+          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+        }
+        return dateCompare;
+      }
+    });
+  }
+}
+// ------------------------------------
+
 enum ViewMode { simpleList, cards, calendar }
 enum SortMode { date, name }
 
@@ -45,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _trips = fetchedTrips;
         _isLoading = false;
       });
+      _applySort(); // Apply the default or selected strategy immediately after fetching
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,6 +90,23 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       setState(() => _isLoading = false);
     }
+  }
+
+  // Applies the current sorting strategy to the state via Strategy Pattern
+  void _applySort() {
+    TripSortStrategy strategy;
+    switch (_currentSortMode) {
+      case SortMode.name:
+        strategy = NameSortStrategy();
+        break;
+      case SortMode.date:
+        strategy = DateSortStrategy();
+        break;
+    }
+
+    setState(() {
+      strategy.sort(_trips);
+    });
   }
 
   @override
@@ -117,18 +172,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (val != null) setState(() => _currentViewMode = val);
                     },
                   ),
-                  const SizedBox(width: 16),
-                  _buildMinimalDropdown(
-                    value: _currentSortMode,
-                    items: {
-                      SortMode.date: 'By Date',
-                      SortMode.name: 'By Name',
-                    },
-                    icon: Icons.sort_rounded,
-                    onChanged: (SortMode? val) {
-                      if (val != null) setState(() => _currentSortMode = val);
-                    },
-                  ),
+                  if (_currentViewMode != ViewMode.calendar) ...[
+                    const SizedBox(width: 16),
+                    _buildMinimalDropdown(
+                      value: _currentSortMode,
+                      items: {
+                        SortMode.date: 'By Date',
+                        SortMode.name: 'By Name',
+                      },
+                      icon: Icons.sort_rounded,
+                      onChanged: (SortMode? val) {
+                        if (val != null) {
+                          setState(() => _currentSortMode = val);
+                          _applySort(); // Trigger strategy re-evaluation on change
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 24),
@@ -148,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         shape: const CircleBorder(),
         backgroundColor: theme.colorScheme.primaryContainer,
+        tooltip: 'Create New Trip',
         onPressed: () async {
           // Route and wait for result
           final newTrip = await Navigator.push(
@@ -161,7 +222,6 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
         child: Icon(Icons.add, color: theme.colorScheme.onPrimaryContainer),
-        tooltip: 'Create New Trip',
       ),
     );
   }
@@ -201,7 +261,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // TODO: cards view, fallback to simple list for now
         return _buildSimpleListView();
       case ViewMode.simpleList:
-      default:
         return _buildSimpleListView();
     }
   }
