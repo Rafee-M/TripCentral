@@ -4,11 +4,13 @@ import 'package:trip_central/features/trips/ui/add_location_map_screen.dart';
 import 'package:trip_central/features/trips/ui/location_detail_screen.dart';
 import 'package:trip_central/features/chat/ui/chat_screen.dart';
 import 'package:trip_central/features/trips/ui/trip_collaborators_screen.dart';
+import 'package:trip_central/features/trips/ui/trip_reviews_screen.dart';
 
 class TripListDetailScreen extends StatefulWidget {
   final Map<String, dynamic> tripList;
 
-  const TripListDetailScreen({Key? key, required this.tripList}) : super(key: key);
+  const TripListDetailScreen({Key? key, required this.tripList})
+    : super(key: key);
 
   @override
   State<TripListDetailScreen> createState() => _TripListDetailScreenState();
@@ -40,7 +42,10 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .maybeSingle();
 
       if (tripRes == null) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip not found or access denied.')));
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Trip not found or access denied.')),
+          );
         if (mounted) Navigator.pop(context);
         return;
       }
@@ -58,12 +63,17 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .order('created_at', ascending: true);
 
       setState(() {
-        _isOwner = tripRes['owner_id'] == Supabase.instance.client.auth.currentUser?.id;
+        _isOwner =
+            tripRes['owner_id'] ==
+            Supabase.instance.client.auth.currentUser?.id;
         _locations = locResponse as List<dynamic>;
         _notes = notesResponse as List<dynamic>;
       });
     } on PostgrestException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -76,9 +86,13 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .delete()
           .eq('id', locationId);
       _fetchData();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location deleted')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Location deleted')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete')));
     }
   }
 
@@ -93,7 +107,13 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
 
       if (collabRes.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No collaborators. Please invite users using the + icon first.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No collaborators. Please invite users using the + icon first.',
+            ),
+          ),
+        );
         return;
       }
 
@@ -113,7 +133,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
             .insert({
               'name': widget.tripList['title'],
               'description': tripListId, // Keeping reference
-              'created_by': Supabase.instance.client.auth.currentUser!.id
+              'created_by': Supabase.instance.client.auth.currentUser!.id,
             })
             .select()
             .single();
@@ -125,7 +145,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           {
             'chat_room_id': roomId,
             'user_id': Supabase.instance.client.auth.currentUser!.id,
-          }
+          },
         ];
 
         // Add all collaborators
@@ -138,22 +158,30 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           }
         }
 
-        await Supabase.instance.client.from('chat_room_members').insert(membersToInsert);
-
+        await Supabase.instance.client
+            .from('chat_room_members')
+            .insert(membersToInsert);
       } else {
         roomId = res['id'];
       }
 
       if (mounted) {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(
-          roomId: roomId,
-          tripListId: tripListId,
-          title: '${widget.tripList['title']} Chat',
-        )));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              roomId: roomId,
+              tripListId: tripListId,
+              title: '${widget.tripList['title']} Chat',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -161,9 +189,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
   Future<void> _showLocationDetails(Map<String, dynamic> loc) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => LocationDetailScreen(location: loc),
-      ),
+      MaterialPageRoute(builder: (_) => LocationDetailScreen(location: loc)),
     );
     if (result == true) {
       _fetchData();
@@ -175,10 +201,18 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Trip'),
-        content: const Text('Are you sure you want to delete this entire trip? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete this entire trip? This action cannot be undone.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -191,12 +225,16 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .delete()
           .eq('id', widget.tripList['id']);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip deleted successfully')));
-        Navigator.pop(context, true); 
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trip deleted successfully')),
+        );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete trip: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete trip: $e')));
       }
     }
   }
@@ -211,7 +249,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
 
     // Safefall to prevent screen crush
     if (!(_isLocationsExpanded || _isNotesExpanded)) {
-       locFlex = 1;
+      locFlex = 1;
     }
 
     return Scaffold(
@@ -219,6 +257,21 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
       appBar: AppBar(
         title: Text(widget.tripList['title'] ?? 'Trip Details'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_border_rounded),
+            tooltip: 'View Reviews',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TripReviewsScreen(
+                    tripListId: widget.tripList['id'].toString(),
+                    tripTitle: (widget.tripList['title'] ?? 'Trip').toString(),
+                  ),
+                ),
+              );
+            },
+          ),
           if (_isOwner)
             IconButton(
               icon: const Icon(Icons.delete),
@@ -232,7 +285,9 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => TripCollaboratorsScreen(tripListId: widget.tripList['id']),
+                  builder: (_) => TripCollaboratorsScreen(
+                    tripListId: widget.tripList['id'],
+                  ),
                 ),
               );
             },
@@ -241,7 +296,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
             icon: const Icon(Icons.chat),
             tooltip: 'Open Chat',
             onPressed: _openChat,
-          )
+          ),
         ],
       ),
       body: _isLoading
@@ -250,11 +305,66 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primaryContainer,
+                          theme.colorScheme.secondaryContainer,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: theme.colorScheme.surface,
+                          child: Icon(
+                            Icons.flight_takeoff_rounded,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                (widget.tripList['title'] ?? 'Trip Details')
+                                    .toString(),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_locations.length} locations · ${_notes.length} notes',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   _buildCollapsibleBox(
                     title: 'Locations',
                     isExpanded: _isLocationsExpanded,
                     flex: locFlex,
-                    onToggle: () => setState(() => _isLocationsExpanded = !_isLocationsExpanded),
+                    onToggle: () => setState(
+                      () => _isLocationsExpanded = !_isLocationsExpanded,
+                    ),
                     theme: theme,
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -263,12 +373,26 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
                       itemBuilder: (context, index) {
                         final loc = _locations[index];
                         return ListTile(
-                          leading: Icon(Icons.place, color: theme.colorScheme.primary),
-                          title: Text(loc['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(loc['address'] ?? 'Lat: ${loc['latitude']}, Lng: ${loc['longitude']}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                          leading: Icon(
+                            Icons.place,
+                            color: theme.colorScheme.primary,
+                          ),
+                          title: Text(
+                            loc['name'] ?? 'Unknown',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            loc['address'] ??
+                                'Lat: ${loc['latitude']}, Lng: ${loc['longitude']}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           onTap: () => _showLocationDetails(loc),
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
                             onPressed: () => _deleteLocation(loc['id']),
                           ),
                         );
@@ -280,7 +404,8 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
                     title: 'Notes',
                     isExpanded: _isNotesExpanded,
                     flex: notesFlex,
-                    onToggle: () => setState(() => _isNotesExpanded = !_isNotesExpanded),
+                    onToggle: () =>
+                        setState(() => _isNotesExpanded = !_isNotesExpanded),
                     theme: theme,
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -289,9 +414,14 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
                       itemBuilder: (context, index) {
                         final note = _notes[index];
                         return ListTile(
-                          leading: Icon(Icons.note, color: theme.colorScheme.tertiary),
+                          leading: Icon(
+                            Icons.note,
+                            color: theme.colorScheme.tertiary,
+                          ),
                           title: Text(note['title'] ?? 'Untitled'),
-                          onTap: () { /* Future Note Details Screen */ },
+                          onTap: () {
+                            /* Future Note Details Screen */
+                          },
                         );
                       },
                     ),
@@ -304,7 +434,8 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddLocationMapScreen(tripListId: widget.tripList['id']),
+              builder: (context) =>
+                  AddLocationMapScreen(tripListId: widget.tripList['id']),
             ),
           );
           _fetchData(); // Refresh after adding
@@ -325,14 +456,24 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
   }) {
     final header = InkWell(
       onTap: onToggle,
-      borderRadius: isExpanded ? const BorderRadius.vertical(top: Radius.circular(16)) : BorderRadius.circular(16),
+      borderRadius: isExpanded
+          ? const BorderRadius.vertical(top: Radius.circular(16))
+          : BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: theme.colorScheme.onSurfaceVariant),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Icon(
+              isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),
@@ -345,10 +486,7 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
     );
 
     if (!isExpanded) {
-      return Container(
-        decoration: boxDecoration,
-        child: header,
-      );
+      return Container(decoration: boxDecoration, child: header);
     }
 
     return Expanded(
