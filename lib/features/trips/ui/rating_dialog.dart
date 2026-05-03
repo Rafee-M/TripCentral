@@ -4,12 +4,18 @@ class RatingDialog extends StatefulWidget {
   final String tripTitle;
   final Function(int rating, String? reviewText) onSubmit;
   final VoidCallback? onCancel;
+  final int? initialRating;
+  final String? initialReviewText;
+  final bool isEditMode;
 
   const RatingDialog({
     Key? key,
     required this.tripTitle,
     required this.onSubmit,
     this.onCancel,
+    this.initialRating,
+    this.initialReviewText,
+    this.isEditMode = false,
   }) : super(key: key);
 
   @override
@@ -17,9 +23,18 @@ class RatingDialog extends StatefulWidget {
 }
 
 class _RatingDialogState extends State<RatingDialog> {
-  int _rating = 0;
-  final _reviewController = TextEditingController();
+  late int _rating;
+  late final TextEditingController _reviewController;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.initialRating ?? 0;
+    _reviewController = TextEditingController(
+      text: widget.initialReviewText ?? '',
+    );
+  }
 
   @override
   void dispose() {
@@ -63,7 +78,10 @@ class _RatingDialogState extends State<RatingDialog> {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Rate Trip', style: theme.textTheme.headlineSmall),
+          Text(
+            widget.isEditMode ? 'Edit Review' : 'Rate Trip',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 4),
           Text(
             widget.tripTitle,
@@ -105,7 +123,9 @@ class _RatingDialogState extends State<RatingDialog> {
               TextField(
                 controller: _reviewController,
                 decoration: InputDecoration(
-                  labelText: 'Add a review (optional)',
+                  labelText: widget.isEditMode
+                      ? 'Update your review (optional)'
+                      : 'Add a review (optional)',
                   hintText: 'Share your thoughts...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -139,7 +159,7 @@ class _RatingDialogState extends State<RatingDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : const Text('Submit'),
+              : Text(widget.isEditMode ? 'Update review' : 'Submit'),
         ),
       ],
     );
