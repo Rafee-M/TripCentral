@@ -14,17 +14,65 @@ class TripService {
 
   final _supabase = Supabase.instance.client;
 
-  /// Fetches simple list of all accessible trips for the current user
+  /// Fetches simple list of all accessible trips for the current user (only owned or collaborated)
   Future<List<TripList>> getUpcomingTrips() async {
     try {
-      final response = await _supabase
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      // 1. Fetch trips owned by the user
+      final ownedResponse = await _supabase
           .from('trip_lists')
           .select()
-          .isFilter('deleted_at', null) // Only fetch active trips
-          .order('start_date', ascending: true);
+          .eq('owner_id', userId)
+          .isFilter('deleted_at', null);
 
-      final data = response as List<dynamic>;
-      return data.map((json) => TripList.fromJson(json as Map<String, dynamic>)).toList();
+      // 2. Fetch trips where the user is a collaborator
+      final collabResponse = await _supabase
+          .from('trip_list_collaborators')
+          .select('trip_lists(*)')
+          .eq('user_id', userId);
+
+      final List<TripList> trips = [];
+      final Set<String> addedIds = {};
+
+      // Helper to add unique trips
+      void addTrip(Map<String, dynamic> json) {
+        if (json['deleted_at'] == null && !addedIds.contains(json['id'])) {
+          addedIds.add(json['id']);
+          trips.add(TripList.fromJson(json));
+        }
+      }
+
+      // Process owned trips
+      for (var json in (ownedResponse as List<dynamic>)) {
+        addTrip(json as Map<String, dynamic>);
+      }
+
+      // Process collaborated trips
+      for (var row in (collabResponse as List<dynamic>)) {
+        final tripListsObj = row['trip_lists'];
+        if (tripListsObj != null) {
+          // trip_lists could be a single object or an array depending on exactly how postgrest returns the 1:1 join
+          if (tripListsObj is Map<String, dynamic>) {
+             addTrip(tripListsObj);
+          } else if (tripListsObj is List) {
+             for (var t in tripListsObj) {
+               addTrip(t as Map<String, dynamic>);
+             }
+          }
+        }
+      }
+
+      // Sort by start_date ascending natively
+      trips.sort((a, b) {
+        if (a.startDate == null && b.startDate == null) return 0;
+        if (a.startDate == null) return 1;
+        if (b.startDate == null) return -1;
+        return a.startDate!.compareTo(b.startDate!);
+      });
+
+      return trips;
     } on PostgrestException {
       // Re-throw standardized Exceptions for the UI to handle gracefully
       rethrow;
