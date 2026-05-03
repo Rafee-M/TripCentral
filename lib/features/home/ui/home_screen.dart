@@ -61,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Implements State tracking for specific view implementations
   ViewMode _currentViewMode = ViewMode.simpleList;
   SortMode _currentSortMode = SortMode.date;
+  DateTime _focusedDate = DateTime.now();
 
   List<TripList> _trips = [];
   bool _isLoading = true;
@@ -208,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? const Center(child: CircularProgressIndicator())
                     : _trips.isEmpty
                     ? _buildEmptyState(theme)
-                    : _buildSimpleListView(),
+                    : _buildCurrentView(),
               ),
             ],
           ),
