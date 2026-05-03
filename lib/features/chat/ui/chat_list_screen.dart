@@ -66,7 +66,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           MaterialPageRoute(
                             builder: (_) => ChatScreen(
                               roomId: room['id'],
-                              tripListId: room['id'], // using room id as placeholder if it is generic
+                              tripListId: room['description'] ?? room['id'], // 'description' stores the true tripListId
                               title: title,
                             ),
                           ),
@@ -78,4 +78,3 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 }
-
