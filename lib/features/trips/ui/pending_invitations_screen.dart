@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:trip_central/features/trips/services/trip_service.dart';
 
 class PendingInvitationsScreen extends StatefulWidget {
   const PendingInvitationsScreen({super.key});
@@ -9,7 +9,7 @@ class PendingInvitationsScreen extends StatefulWidget {
 }
 
 class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
-  final _supabase = Supabase.instance.client;
+  final TripService _tripService = TripService();
   List<dynamic> _invitations = [];
   bool _isLoading = true;
 
@@ -22,11 +22,7 @@ class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
   Future<void> _fetchInvitations() async {
     setState(() => _isLoading = true);
     try {
-      final res = await _supabase
-          .from('trip_list_invitations')
-          .select('id, status, trip_list_id, trip_lists(title), profiles!invited_by(display_name, username)')
-          .eq('invited_user_id', _supabase.auth.currentUser!.id)
-          .eq('status', 'pending');
+      final res = await _tripService.getPendingInvitations();
 
       setState(() {
         _invitations = res;
@@ -36,14 +32,14 @@ class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load: $e')));
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _acceptInvite(String inviteId) async {
     try {
-      final res = await _supabase.rpc('accept_invitation', params: {'p_invitation_id': inviteId});
-      if (res != null && res['success'] == true) {
+      final success = await _tripService.acceptInvitation(inviteId);
+      if (success) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invitation accepted!')));
         _fetchInvitations();
       } else {
