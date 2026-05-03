@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trip_central/shared/models/trip_list.dart';
 import 'package:trip_central/features/trips/services/trip_service.dart';
 import 'package:trip_central/features/trips/ui/trip_list_detail_screen.dart';
+import 'package:trip_central/features/trips/ui/trip_discovery_screen.dart';
 import 'package:intl/intl.dart';
 
 import '../../trips/ui/create_trip_screen.dart';
@@ -44,6 +45,7 @@ class DateSortStrategy implements TripSortStrategy {
 // ------------------------------------
 
 enum ViewMode { simpleList, cards, calendar }
+
 enum SortMode { date, name }
 
 class HomeScreen extends StatefulWidget {
@@ -59,9 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Implements State tracking for specific view implementations
   ViewMode _currentViewMode = ViewMode.simpleList;
   SortMode _currentSortMode = SortMode.date;
-
-  // State for Calendar View
-  DateTime _focusedDate = DateTime.now();
 
   List<TripList> _trips = [];
   bool _isLoading = true;
@@ -122,18 +121,28 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: theme.colorScheme.primaryContainer,
-            child: Icon(Icons.flight_takeoff, color: theme.colorScheme.onPrimaryContainer),
+            child: Icon(
+              Icons.flight_takeoff,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () { /* TODO: Implement Search */ },
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TripDiscoveryScreen()),
+              );
+            },
             tooltip: 'Search',
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () { /* TODO: Implement Settings */ },
+            onPressed: () {
+              /* TODO: Implement Settings */
+            },
             tooltip: 'Settings',
           ),
         ],
@@ -198,8 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _trips.isEmpty
-                        ? _buildEmptyState(theme)
-                        : _buildCurrentView(),
+                    ? _buildEmptyState(theme)
+                    : _buildSimpleListView(),
               ),
             ],
           ),
@@ -232,7 +241,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.landscape, size: 64, color: theme.colorScheme.surfaceContainerHighest),
+          Icon(
+            Icons.landscape,
+            size: 64,
+            color: theme.colorScheme.surfaceContainerHighest,
+          ),
           const SizedBox(height: 16),
           Text(
             'No trips yet.',
@@ -511,10 +524,15 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, index) {
         final trip = _trips[index];
         final dateFormat = DateFormat('MMM d, yyyy');
-        final strDate = trip.startDate != null ? dateFormat.format(trip.startDate!) : 'No dates set';
+        final strDate = trip.startDate != null
+            ? dateFormat.format(trip.startDate!)
+            : 'No dates set';
 
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 4,
+          ),
           title: Text(
             trip.title,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -523,16 +541,17 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(top: 4.0),
             child: Text(strDate),
           ),
-          trailing: const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+          trailing: const Icon(
+            Icons.chevron_right,
+            size: 16,
+            color: Colors.grey,
+          ),
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => TripListDetailScreen(
-                  tripList: {
-                    'id': trip.id,
-                    'title': trip.title,
-                  },
+                  tripList: {'id': trip.id, 'title': trip.title},
                 ),
               ),
             );
@@ -571,10 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.w500,
               ),
               items: items.entries.map((e) {
-                return DropdownMenuItem<T>(
-                  value: e.key,
-                  child: Text(e.value),
-                );
+                return DropdownMenuItem<T>(value: e.key, child: Text(e.value));
               }).toList(),
               onChanged: onChanged,
             ),
