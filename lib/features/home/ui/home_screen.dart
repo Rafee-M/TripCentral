@@ -18,7 +18,9 @@ abstract class TripSortStrategy {
 class NameSortStrategy implements TripSortStrategy {
   @override
   void sort(List<TripList> trips) {
-    trips.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    trips.sort(
+      (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+    );
   }
 }
 
@@ -153,70 +155,116 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // Elegant minimal UI styling
-      body: RefreshIndicator(
-        onRefresh: _fetchTrips,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                'Upcoming Trips',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Dropdowns for view and sort modes natively styled
-              Row(
-                children: [
-                  _buildMinimalDropdown(
-                    value: _currentViewMode,
-                    items: {
-                      ViewMode.simpleList: 'Simple List',
-                      ViewMode.cards: 'Cards',
-                      ViewMode.calendar: 'Calendar',
-                    },
-                    icon: Icons.view_agenda_outlined,
-                    onChanged: (ViewMode? val) {
-                      if (val != null) setState(() => _currentViewMode = val);
-                    },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.05),
+              theme.colorScheme.surface,
+            ],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: _fetchTrips,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.secondary,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.16,
+                        ),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
                   ),
-                  if (_currentViewMode != ViewMode.calendar) ...[
-                    const SizedBox(width: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Upcoming Trips',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'A refined planning view for your next journey.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onPrimary.withValues(
+                            alpha: 0.9,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
                     _buildMinimalDropdown(
-                      value: _currentSortMode,
+                      value: _currentViewMode,
                       items: {
-                        SortMode.date: 'By Date',
-                        SortMode.name: 'By Name',
+                        ViewMode.simpleList: 'Simple List',
+                        ViewMode.cards: 'Cards',
+                        ViewMode.calendar: 'Calendar',
                       },
-                      icon: Icons.sort_rounded,
-                      onChanged: (SortMode? val) {
-                        if (val != null) {
-                          setState(() => _currentSortMode = val);
-                          _applySort(); // Trigger strategy re-evaluation on change
-                        }
+                      icon: Icons.view_agenda_outlined,
+                      onChanged: (ViewMode? val) {
+                        if (val != null) setState(() => _currentViewMode = val);
                       },
                     ),
+                    if (_currentViewMode != ViewMode.calendar) ...[
+                      const SizedBox(width: 16),
+                      _buildMinimalDropdown(
+                        value: _currentSortMode,
+                        items: {
+                          SortMode.date: 'By Date',
+                          SortMode.name: 'By Name',
+                        },
+                        icon: Icons.sort_rounded,
+                        onChanged: (SortMode? val) {
+                          if (val != null) {
+                            setState(() => _currentSortMode = val);
+                            _applySort();
+                          }
+                        },
+                      ),
+                    ],
                   ],
-                ],
-              ),
-              const SizedBox(height: 24),
+                ),
+                const SizedBox(height: 18),
 
-              // Implementing Strategy Pattern logic natively via `build` delegations:
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _trips.isEmpty
-                    ? _buildEmptyState(theme)
-                    : _buildCurrentView(),
-              ),
-            ],
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _trips.isEmpty
+                      ? _buildEmptyState(theme)
+                      : _buildCurrentView(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -244,29 +292,43 @@ class _HomeScreenState extends State<HomeScreen> {
   // Elegant Empty State
   Widget _buildEmptyState(ThemeData theme) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.landscape,
-            size: 64,
-            color: theme.colorScheme.surfaceContainerHighest,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'No trips yet.',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.travel_explore_rounded,
+              size: 64,
+              color: theme.colorScheme.primary,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap the + button to start a new adventure.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 16),
+            Text(
+              'No trips yet.',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Tap the + button to start a new adventure.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -287,7 +349,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Custom minimal logic for elegant Calendar view
   Widget _buildCalendarView() {
     final theme = Theme.of(context);
-    final daysInMonth = DateUtils.getDaysInMonth(_focusedDate.year, _focusedDate.month);
+    final daysInMonth = DateUtils.getDaysInMonth(
+      _focusedDate.year,
+      _focusedDate.month,
+    );
     final firstDayOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
     // get short weekday (1 = Monday, 7 = Sunday)
     final firstDayOffset = firstDayOfMonth.weekday % 7;
@@ -298,10 +363,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (trip.startDate != null &&
           trip.startDate!.year == _focusedDate.year &&
           trip.startDate!.month == _focusedDate.month) {
-
         // Populate days between start and end date, or just start date
         int startDay = trip.startDate!.day;
-        int endDay = trip.endDate != null && trip.endDate!.month == _focusedDate.month ? trip.endDate!.day : startDay;
+        int endDay =
+            trip.endDate != null && trip.endDate!.month == _focusedDate.month
+            ? trip.endDate!.day
+            : startDay;
 
         for (int i = startDay; i <= endDay; i++) {
           dailyTrips.putIfAbsent(i, () => []).add(trip);
@@ -346,7 +413,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(Icons.chevron_left),
                   onPressed: () {
                     setState(() {
-                      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1, 1);
+                      _focusedDate = DateTime(
+                        _focusedDate.year,
+                        _focusedDate.month - 1,
+                        1,
+                      );
                     });
                   },
                 ),
@@ -354,7 +425,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(Icons.chevron_right),
                   onPressed: () {
                     setState(() {
-                      _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1, 1);
+                      _focusedDate = DateTime(
+                        _focusedDate.year,
+                        _focusedDate.month + 1,
+                        1,
+                      );
                     });
                   },
                 ),
@@ -397,9 +472,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
               int day = index - firstDayOffset + 1;
               final dayTrips = dailyTrips[day] ?? [];
-              final isToday = day == DateTime.now().day &&
-                              _focusedDate.year == DateTime.now().year &&
-                              _focusedDate.month == DateTime.now().month;
+              final isToday =
+                  day == DateTime.now().day &&
+                  _focusedDate.year == DateTime.now().year &&
+                  _focusedDate.month == DateTime.now().month;
 
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
@@ -425,9 +501,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isToday ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5) : Colors.transparent,
+                    color: isToday
+                        ? theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.5,
+                          )
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
-                    border: isToday ? Border.all(color: theme.colorScheme.primary) : null,
+                    border: isToday
+                        ? Border.all(color: theme.colorScheme.primary)
+                        : null,
                   ),
                   child: Stack(
                     alignment: Alignment.center,
@@ -435,7 +517,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         '$day',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isToday
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                           color: isToday ? theme.colorScheme.primary : null,
                         ),
                       ),
@@ -444,23 +528,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         Positioned(
                           bottom: 4,
                           child: dayTrips.length == 1
-                            ? Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF2B8B5), // Elegant pastel red
-                                  shape: BoxShape.circle,
+                              ? Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                    color: Color(
+                                      0xFFF2B8B5,
+                                    ), // Elegant pastel red
+                                    shape: BoxShape.circle,
+                                  ),
+                                )
+                              : Text(
+                                  '${dayTrips.length}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(
+                                      0xFFF2B8B5,
+                                    ), // Elegant pastel red
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                '${dayTrips.length}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFF2B8B5), // Elegant pastel red
-                                ),
-                              ),
-                        )
+                        ),
                     ],
                   ),
                 ),
@@ -472,10 +560,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showDayTripsModal(BuildContext context, List<TripList> dayTrips, int day) {
+  void _showDayTripsModal(
+    BuildContext context,
+    List<TripList> dayTrips,
+    int day,
+  ) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 24.0),
@@ -484,7 +578,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 'Trips on $day ${DateFormat('MMMM').format(_focusedDate)}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -494,7 +591,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final trip = dayTrips[index];
                     return ListTile(
-                      title: Text(trip.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      title: Text(
+                        trip.title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       trailing: const Icon(Icons.chevron_right, size: 16),
                       onTap: () {
                         Navigator.pop(context); // close modal
@@ -502,10 +602,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => TripListDetailScreen(
-                              tripList: {
-                                'id': trip.id,
-                                'title': trip.title,
-                              },
+                              tripList: {'id': trip.id, 'title': trip.title},
                             ),
                           ),
                         );
@@ -513,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-              )
+              ),
             ],
           ),
         );
@@ -523,10 +620,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Implementation of simple view strategy
   Widget _buildSimpleListView() {
+    final theme = Theme.of(context);
+
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 20),
       itemCount: _trips.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final trip = _trips[index];
         final dateFormat = DateFormat('MMM d, yyyy');
@@ -534,34 +634,46 @@ class _HomeScreenState extends State<HomeScreen> {
             ? dateFormat.format(trip.startDate!)
             : 'No dates set';
 
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 8,
-            horizontal: 4,
-          ),
-          title: Text(
-            trip.title,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: Text(strDate),
-          ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            size: 16,
-            color: Colors.grey,
-          ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TripListDetailScreen(
-                  tripList: {'id': trip.id, 'title': trip.title},
+        return Card(
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 16,
+            ),
+            leading: CircleAvatar(
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Icon(
+                Icons.flight_takeoff_rounded,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+            title: Text(
+              trip.title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                strDate,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-            );
-          },
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TripListDetailScreen(
+                    tripList: {'id': trip.id, 'title': trip.title},
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
     );
