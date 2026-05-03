@@ -338,6 +338,11 @@ RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
           SELECT 1 FROM public.trip_list_collaborators tlc
           WHERE tlc.trip_list_id = p_trip_id AND tlc.user_id = p_user_id
         )
+        -- ADDED: Allows pending invitees to view the basic trip details (solves "Unknown Trip" GUI bug)
+        OR EXISTS (
+          SELECT 1 FROM public.trip_list_invitations tli
+          WHERE tli.trip_list_id = p_trip_id AND tli.invited_user_id = p_user_id AND tli.status = 'pending'
+        )
       )
   );
 $$;
@@ -1085,4 +1090,4 @@ You’ll need to call `supabase.storage.from(bucket).createSignedUrl(path)` in t
 
 
 
-  
+

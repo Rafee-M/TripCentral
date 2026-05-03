@@ -79,6 +79,34 @@ class TripService {
     }
   }
 
+  /// Fetches pending invitations for the current user
+  Future<List<Map<String, dynamic>>> getPendingInvitations() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      final res = await _supabase
+          .from('trip_list_invitations')
+          .select('id, status, trip_list_id, trip_lists(title), profiles!invited_by(display_name, username)')
+          .eq('invited_user_id', userId)
+          .eq('status', 'pending');
+
+      return List<Map<String, dynamic>>.from(res);
+    } on PostgrestException {
+      rethrow;
+    }
+  }
+
+  /// Accepts a trip invitation using the RPC
+  Future<bool> acceptInvitation(String inviteId) async {
+    try {
+      final res = await _supabase.rpc('accept_invitation', params: {'p_invitation_id': inviteId});
+      return res != null && res['success'] == true;
+    } on PostgrestException {
+      rethrow;
+    }
+  }
+
   /// Builders Pattern conceptually: Assemble payload from modular variables to store in DB
   Future<TripList> createTrip({
     required String title,
