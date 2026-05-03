@@ -39,14 +39,34 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 class GenericHomeScreen extends StatelessWidget {
   const GenericHomeScreen({super.key});
 
+  // --- CONFIGURATION ---
+  // Easily toggle images on and off here
+  final bool _showImages = true;
+
+  // Hardcoded direct URLs for the images
+  final String _imageUrl1 = 'https://lh3.googleusercontent.com/gps-cs-s/APNQkAEVmxV2_yPrRsLy87v71Kc6_s9pukMVr4NQfsJzwjQ72ZYgHd0SLNzYkFvnVNkQDOU3KvqJaZNgwUosJOcTsmNMwneHS0lYt7SdEEgvXHhPA60Qnqq8JO8kYNbu6oNExAHDp0nz=w270-h312-n-k-no?q=80&w=600&auto=format&fit=crop';
+  final String _imageUrl2 = 'https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcS4WGfz_BdIV5nQPtgEw_7GKwJgy1Hxsax31S2VVTtX-EZOJHZahczGCKZLl1D-gaGFbsvqq3sE6my8RtTlmkDEVqlcs8boa530t3gBYTtiJqx1w5HGdCMeTeelQkPqprp4q2FhWBg&s=19&ec=121643274?q=80&w=600&auto=format&fit=crop';
+  // ---------------------
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Home'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Home',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
+            icon: Icon(Icons.notifications_none_rounded, color: theme.colorScheme.onSurface),
             tooltip: 'Pending Invitations',
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const PendingInvitationsScreen()));
@@ -55,46 +75,84 @@ class GenericHomeScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Explore New places with ease',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            const SizedBox(height: 16),
+            Text(
+              'Explore new places with ease',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+                letterSpacing: -0.5,
+              ),
             ),
-            const SizedBox(height: 20),
-            // Placeholder for maps images
+            const SizedBox(height: 8),
+            Text(
+              'Coming in a future release',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Image Section
             SizedBox(
-              height: 200,
+              height: 220,
               child: ListView(
                 scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 children: [
-                  Container(
-                    width: 150,
-                    margin: const EdgeInsets.only(right: 10),
-                    color: Colors.grey[300],
-                    child: const Center(child: Text('Map Image 1')),
-                  ),
-                  Container(
-                    width: 150,
-                    margin: const EdgeInsets.only(right: 10),
-                    color: Colors.grey[300],
-                    child: const Center(child: Text('Map Image 2')),
-                  ),
+                  _buildMapCard(theme, _imageUrl1, 'Map Image 1'),
+                  const SizedBox(width: 16),
+                  _buildMapCard(theme, _imageUrl2, 'Map Image 2'),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Suggested places',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            // More content goes here
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
-}
 
+  // Extracted widget for cleaner reading
+  Widget _buildMapCard(ThemeData theme, String imageUrl, String fallbackText) {
+    return Container(
+      width: 160,
+      clipBehavior: Clip.antiAlias, // Ensures the image respects the border radius
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: _showImages
+          ? Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme, fallbackText),
+      )
+          : _buildPlaceholder(theme, fallbackText),
+    );
+  }
+
+  // Elegant fallback/placeholder
+  Widget _buildPlaceholder(ThemeData theme, String text) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.map_outlined, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(height: 8),
+          Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
