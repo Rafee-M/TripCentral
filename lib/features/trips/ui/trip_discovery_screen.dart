@@ -121,7 +121,7 @@ class _TripDiscoveryScreenState extends State<TripDiscoveryScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Search Trips')),
+      appBar: AppBar(title: const Text('Search Trips'), centerTitle: false),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,
@@ -130,79 +130,102 @@ class _TripDiscoveryScreenState extends State<TripDiscoveryScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        decoration: InputDecoration(
-                          hintText: 'Search by trip title',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchController.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _load();
-                                  },
-                                  icon: const Icon(Icons.close),
-                                ),
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHighest,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.35,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('Public'),
-                            selected: _filter == TripDiscoveryFilter.public,
-                            onSelected: (_) =>
-                                _onFilterChanged(TripDiscoveryFilter.public),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Discover trips',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
-                          ChoiceChip(
-                            label: const Text('Own'),
-                            selected: _filter == TripDiscoveryFilter.own,
-                            onSelected: (_) =>
-                                _onFilterChanged(TripDiscoveryFilter.own),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Search public, owned, or invited trips with a clean, modern interface.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          ChoiceChip(
-                            label: const Text('Invited'),
-                            selected: _filter == TripDiscoveryFilter.invited,
-                            onSelected: (_) =>
-                                _onFilterChanged(TripDiscoveryFilter.invited),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          decoration: InputDecoration(
+                            hintText: 'Search by trip title',
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            suffixIcon: _searchController.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _load();
+                                    },
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Text('Sort by', style: theme.textTheme.bodyMedium),
-                          const SizedBox(width: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ChoiceChip(
+                              label: const Text('Public'),
+                              selected: _filter == TripDiscoveryFilter.public,
+                              onSelected: (_) =>
+                                  _onFilterChanged(TripDiscoveryFilter.public),
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<TripDiscoverySort>(
-                                value: _sort,
-                                items: _sortItems(),
-                                onChanged: _onSortChanged,
+                            ChoiceChip(
+                              label: const Text('Own'),
+                              selected: _filter == TripDiscoveryFilter.own,
+                              onSelected: (_) =>
+                                  _onFilterChanged(TripDiscoveryFilter.own),
+                            ),
+                            ChoiceChip(
+                              label: const Text('Invited'),
+                              selected: _filter == TripDiscoveryFilter.invited,
+                              onSelected: (_) =>
+                                  _onFilterChanged(TripDiscoveryFilter.invited),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Text('Sort by', style: theme.textTheme.bodyMedium),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<TripDiscoverySort>(
+                                  value: _sort,
+                                  items: _sortItems(),
+                                  onChanged: _onSortChanged,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -226,8 +249,10 @@ class _TripDiscoveryScreenState extends State<TripDiscoveryScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                   sliver: SliverList.separated(
                     itemCount: _results.length,
-                    itemBuilder: (context, index) =>
-                        _TripCard(card: _results[index]),
+                    itemBuilder: (context, index) => _TripCard(
+                      card: _results[index],
+                      onReviewChanged: _load,
+                    ),
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
                   ),
@@ -241,9 +266,10 @@ class _TripDiscoveryScreenState extends State<TripDiscoveryScreen> {
 }
 
 class _TripCard extends StatefulWidget {
-  const _TripCard({required this.card});
+  const _TripCard({required this.card, this.onReviewChanged});
 
   final DiscoverTripCard card;
+  final VoidCallback? onReviewChanged;
 
   @override
   State<_TripCard> createState() => _TripCardState();
@@ -251,26 +277,23 @@ class _TripCard extends StatefulWidget {
 
 class _TripCardState extends State<_TripCard> {
   final TripDiscoveryService _service = TripDiscoveryService();
-  bool _isRating = false;
 
-  void _showRatingDialog() {
-    showDialog<void>(
+  Future<void> _showRatingDialog() async {
+    final wasEditMode = widget.card.hasMyReview;
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => RatingDialog(
         tripTitle: widget.card.title,
+        isEditMode: wasEditMode,
+        initialRating: widget.card.myRating,
+        initialReviewText: widget.card.myReviewText,
         onSubmit: (rating, reviewText) async {
-          setState(() => _isRating = true);
           try {
             await _service.submitRating(
               tripListId: widget.card.id,
               rating: rating,
               reviewText: reviewText,
             );
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Rating submitted!')),
-              );
-            }
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(
@@ -278,12 +301,23 @@ class _TripCardState extends State<_TripCard> {
               ).showSnackBar(SnackBar(content: Text('Error: $e')));
             }
             rethrow;
-          } finally {
-            if (mounted) {
-              setState(() => _isRating = false);
-            }
           }
         },
+      ),
+    );
+
+    if (!mounted || result != true) {
+      return;
+    }
+
+    widget.onReviewChanged?.call();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          wasEditMode
+              ? 'Review updated successfully'
+              : 'Review submitted successfully',
+        ),
       ),
     );
   }
@@ -295,96 +329,197 @@ class _TripCardState extends State<_TripCard> {
         ? DateFormat('MMM d, yyyy').format(widget.card.startDate!)
         : 'Date not set';
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TripListDetailScreen(
-              tripList: {'id': widget.card.id, 'title': widget.card.title},
-            ),
-          ),
-        );
-      },
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: theme.colorScheme.surfaceContainerLow,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _CoverImage(coverImageUrl: widget.card.coverImageUrl),
-              const SizedBox(height: 10),
-              Text(
-                widget.card.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: theme.colorScheme.surfaceContainerLow,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TripListDetailScreen(
+                tripList: {'id': widget.card.id, 'title': widget.card.title},
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(Icons.event, size: 16, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(dateText, style: theme.textTheme.bodySmall),
-                  const SizedBox(width: 10),
-                  if (widget.card.averageRating != null) ...[
-                    Icon(
-                      Icons.star_rounded,
-                      size: 16,
-                      color: theme.colorScheme.tertiary,
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                _CoverImage(coverImageUrl: widget.card.coverImageUrl),
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                    const SizedBox(width: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      widget.card.isPublic ? 'Public' : 'Private',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.card.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            height: 1.15,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _MetaChip(icon: Icons.event_rounded, label: dateText),
+                      if (widget.card.averageRating != null)
+                        _MetaChip(
+                          icon: Icons.star_rounded,
+                          label:
+                              '${widget.card.averageRating!.toStringAsFixed(1)} (${widget.card.reviewCount})',
+                        )
+                      else
+                        _MetaChip(
+                          icon: Icons.star_border_rounded,
+                          label: 'No ratings yet',
+                        ),
+                      if (widget.card.hasMyReview)
+                        _MetaChip(
+                          icon: Icons.edit_rounded,
+                          label: 'Review saved',
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (widget.card.locationNames.isEmpty)
                     Text(
-                      '${widget.card.averageRating!.toStringAsFixed(1)} (${widget.card.reviewCount})',
-                      style: theme.textTheme.bodySmall,
+                      'No locations added yet',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: widget.card.locationNames
+                          .map(
+                            (name) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                name,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  if (widget.card.isPublic) ...[
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: widget.card.isOwnedByCurrentUser
+                          ? OutlinedButton.icon(
+                              onPressed: null,
+                              icon: const Icon(Icons.block_outlined, size: 18),
+                              label: const Text('Owner cannot review'),
+                            )
+                          : FilledButton.tonalIcon(
+                              onPressed: _showRatingDialog,
+                              icon: Icon(
+                                widget.card.hasMyReview
+                                    ? Icons.edit_rounded
+                                    : Icons.star_rounded,
+                                size: 18,
+                              ),
+                              label: Text(
+                                widget.card.hasMyReview
+                                    ? 'Edit review'
+                                    : 'Rate this trip',
+                              ),
+                            ),
                     ),
                   ],
                 ],
               ),
-              const SizedBox(height: 10),
-              if (widget.card.locationNames.isEmpty)
-                Text('No locations added yet', style: theme.textTheme.bodySmall)
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: widget.card.locationNames
-                      .map(
-                        (name) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(name, style: theme.textTheme.labelMedium),
-                        ),
-                      )
-                      .toList(),
-                ),
-              // Rate button for public trips
-              if (widget.card.isPublic) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _isRating ? null : _showRatingDialog,
-                    icon: const Icon(Icons.star_outline, size: 18),
-                    label: const Text('Rate this trip'),
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.primary),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -411,7 +546,7 @@ class _CoverImage extends StatelessWidget {
             ],
           ),
         ),
-        child: const Center(child: Icon(Icons.landscape, size: 36)),
+        child: const Center(child: Icon(Icons.landscape_rounded, size: 36)),
       );
     }
 
@@ -426,7 +561,7 @@ class _CoverImage extends StatelessWidget {
           height: 140,
           color: theme.colorScheme.surfaceContainerHighest,
           alignment: Alignment.center,
-          child: const Icon(Icons.broken_image_outlined),
+          child: const Icon(Icons.broken_image_rounded),
         ),
       ),
     );

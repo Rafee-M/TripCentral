@@ -23,18 +23,29 @@ class LocationPayloadAdapter {
       'longitude': place.latLng?.lng,
       'place_id': place.id,
       'place_type': place.primaryType,
-      'phone_number': place.phoneNumber ?? place.nationalPhoneNumber ?? place.internationalPhoneNumber,
+      'phone_number':
+          place.phoneNumber ??
+          place.nationalPhoneNumber ??
+          place.internationalPhoneNumber,
       'website_url': place.websiteUri?.toString(),
       'order_index': orderIndex,
       'metadata': {
         'rating': place.rating,
         'priceLevel': place.priceLevel?.name,
-        'openingHours': place.currentOpeningHours?.weekdayText ?? place.openingHours?.weekdayText,
-        'photoReferences': place.photoMetadatas?.map((photo) => {
-          'photoReference': photo.photoReference,
-          'width': photo.width,
-          'height': photo.height,
-        }).toList() ?? [],
+        'openingHours':
+            place.currentOpeningHours?.weekdayText ??
+            place.openingHours?.weekdayText,
+        'photoReferences':
+            place.photoMetadatas
+                ?.map(
+                  (photo) => {
+                    'photoReference': photo.photoReference,
+                    'width': photo.width,
+                    'height': photo.height,
+                  },
+                )
+                .toList() ??
+            [],
       },
     };
   }
@@ -91,7 +102,6 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
 
   late places.FlutterGooglePlacesSdk _placesSdk;
   List<places.AutocompletePrediction> _predictions = [];
-  String? _selectedPlaceId;
   places.Place? _selectedPlace; // Hold full Google Place details object
 
   // Manual Form State
@@ -103,7 +113,9 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
   @override
   void initState() {
     super.initState();
-    _placesSdk = places.FlutterGooglePlacesSdk(dotenv.get('GOOGLE_MAPS_API_KEY') ?? '');
+    _placesSdk = places.FlutterGooglePlacesSdk(
+      dotenv.get('GOOGLE_MAPS_API_KEY'),
+    );
   }
 
   Future<void> _onSearchChanged(String query) async {
@@ -113,7 +125,6 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
       });
       return;
     }
-
 
     try {
       final result = await _placesSdk.findAutocompletePredictions(query);
@@ -125,12 +136,13 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
     }
   }
 
-  Future<void> _selectPrediction(places.AutocompletePrediction prediction) async {
+  Future<void> _selectPrediction(
+    places.AutocompletePrediction prediction,
+  ) async {
     setState(() {
       _predictions = [];
       _searchController.text = prediction.primaryText ?? '';
       _nameController.text = prediction.primaryText ?? '';
-      _selectedPlaceId = prediction.placeId;
     });
 
     FocusScope.of(context).unfocus();
@@ -155,10 +167,7 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
         );
         final place = placeResult.place;
         if (place != null && place.latLng != null) {
-          final latLng = LatLng(
-            place.latLng!.lat,
-            place.latLng!.lng
-          );
+          final latLng = LatLng(place.latLng!.lat, place.latLng!.lng);
 
           setState(() {
             _selectedLocation = latLng;
@@ -182,7 +191,6 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
   void _onTap(LatLng location) {
     setState(() {
       _selectedLocation = location;
-      _selectedPlaceId = null; // Clear place ID if manually tapped
       _selectedPlace = null;
       _nameController.text = 'Selected Location';
       _searchController.text = '';
@@ -192,12 +200,15 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
   Future<void> _saveLocation() async {
     if (_inputMode == LocationInputMode.maps && _selectedPlace == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a valid place from the map/search')),
+        const SnackBar(
+          content: Text('Please select a valid place from the map/search'),
+        ),
       );
       return;
     }
 
-    if (_inputMode == LocationInputMode.manual && _nameController.text.trim().isEmpty) {
+    if (_inputMode == LocationInputMode.manual &&
+        _nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Location Name is required')),
       );
@@ -267,7 +278,9 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
               },
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: theme.colorScheme.primary),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
               child: Text(
                 _inputMode == LocationInputMode.maps ? 'Maps' : 'Manual',
@@ -278,7 +291,9 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
           IconButton(icon: const Icon(Icons.check), onPressed: _saveLocation),
         ],
       ),
-      body: _inputMode == LocationInputMode.maps ? _buildMapsMode() : _buildManualMode(theme),
+      body: _inputMode == LocationInputMode.maps
+          ? _buildMapsMode()
+          : _buildManualMode(theme),
     );
   }
 
@@ -320,12 +335,22 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
         ),
         if (_selectedPlace != null)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 4.0,
+            ),
             child: Row(
               children: [
                 const Icon(Icons.location_on, color: Colors.blue),
                 const SizedBox(width: 8),
-                Expanded(child: Text(_selectedPlace!.name ?? _selectedPlace!.displayName?.text ?? '', style: const TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(
+                  child: Text(
+                    _selectedPlace!.name ??
+                        _selectedPlace!.displayName?.text ??
+                        '',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
           ),
@@ -359,18 +384,27 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Location Name', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              labelText: 'Location Name',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _manualDescController,
-            decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              labelText: 'Description',
+              border: OutlineInputBorder(),
+            ),
             maxLines: 3,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _manualAddressController,
-            decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+              labelText: 'Address',
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -378,7 +412,10 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
               Expanded(
                 child: TextField(
                   controller: _manualPhoneController,
-                  decoration: const InputDecoration(labelText: 'Phone', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    border: OutlineInputBorder(),
+                  ),
                   keyboardType: TextInputType.phone,
                 ),
               ),
@@ -386,7 +423,10 @@ class _AddLocationMapScreenState extends State<AddLocationMapScreen> {
               Expanded(
                 child: TextField(
                   controller: _manualWebsiteController,
-                  decoration: const InputDecoration(labelText: 'Website / URL', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Website / URL',
+                    border: OutlineInputBorder(),
+                  ),
                   keyboardType: TextInputType.url,
                 ),
               ),

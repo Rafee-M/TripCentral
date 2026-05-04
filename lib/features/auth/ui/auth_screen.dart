@@ -44,7 +44,9 @@ class _AuthScreenState extends State<AuthScreen> {
     if (selected.isEmpty) return;
     setState(() {
       _authMode = selected.first;
-      _strategy = _authMode == AuthMode.login ? LoginStrategy() : SignUpStrategy();
+      _strategy = _authMode == AuthMode.login
+          ? LoginStrategy()
+          : SignUpStrategy();
       // Clear secondary fields
       _usernameController.clear();
       _displayNameController.clear();
@@ -70,7 +72,11 @@ class _AuthScreenState extends State<AuthScreen> {
       if (_authMode == AuthMode.signUp) {
         // App expects email confirmation ON in settings config.
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful! Please check your email to verify your account.')),
+          const SnackBar(
+            content: Text(
+              'Registration successful! Please check your email to verify your account.',
+            ),
+          ),
         );
         _onModeChanged({AuthMode.login}); // Slide back to login seamless!
       } else {
@@ -85,13 +91,22 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } on AuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
     } on PostgrestException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Database error: ${e.message}'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Database error: ${e.message}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -102,62 +117,131 @@ class _AuthScreenState extends State<AuthScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _strategy.title,
-                  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-
-                // Seamless Segmented Selector for Mode
-                SegmentedButton<AuthMode>(
-                  segments: const [
-                    ButtonSegment(value: AuthMode.login, label: Text('Log In')),
-                    ButtonSegment(value: AuthMode.signUp, label: Text('Sign Up')),
-                  ],
-                  selected: {_authMode},
-                  onSelectionChanged: _onModeChanged,
-                  showSelectedIcon: false,
-                ),
-                const SizedBox(height: 32),
-
-                Form(
-                  key: _formKey,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Column(
-                      key: ValueKey(_authMode),
-                      children: _strategy.buildFields(
-                        emailController: _emailController,
-                        passwordController: _passwordController,
-                        usernameController: _usernameController,
-                        displayNameController: _displayNameController,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.08),
+              theme.colorScheme.secondary.withValues(alpha: 0.08),
+              theme.colorScheme.surface,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.35,
                       ),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 30,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          Icons.flight_takeoff_rounded,
+                          size: 40,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'TripCentral',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _strategy.title,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 28),
+
+                      SegmentedButton<AuthMode>(
+                        segments: const [
+                          ButtonSegment(
+                            value: AuthMode.login,
+                            label: Text('Log In'),
+                          ),
+                          ButtonSegment(
+                            value: AuthMode.signUp,
+                            label: Text('Sign Up'),
+                          ),
+                        ],
+                        selected: {_authMode},
+                        onSelectionChanged: _onModeChanged,
+                        showSelectedIcon: false,
+                      ),
+                      const SizedBox(height: 24),
+
+                      Form(
+                        key: _formKey,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: Column(
+                            key: ValueKey(_authMode),
+                            children: _strategy.buildFields(
+                              emailController: _emailController,
+                              passwordController: _passwordController,
+                              usernameController: _usernameController,
+                              displayNameController: _displayNameController,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      if (_isLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else
+                        FilledButton(
+                          onPressed: _submitForm,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              _strategy.submitButtonText,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 32),
-
-                if (_isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  FilledButton(
-                    onPressed: _submitForm,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(_strategy.submitButtonText, style: const TextStyle(fontSize: 16)),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
         ),
@@ -165,4 +249,3 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
-
