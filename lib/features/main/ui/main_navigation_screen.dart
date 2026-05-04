@@ -122,12 +122,12 @@ class GenericHomeScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.95),
-                    theme.colorScheme.secondary.withValues(alpha: 0.92),
+                    theme.colorScheme.primary.withValues(alpha: 0.85),
+                    theme.colorScheme.secondary.withValues(alpha: 0.85),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -135,31 +135,18 @@ class GenericHomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.18),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Explore new places with ease',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w800,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Trip planning, reviews, and collaboration in one polished workspace.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Explore new places with ease',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             const SizedBox(height: 18),
