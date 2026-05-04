@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:trip_central/features/home/ui/home_screen.dart'; // Which currently has the lists
 import 'package:trip_central/features/chat/ui/chat_list_screen.dart';
 import 'package:trip_central/features/trips/ui/pending_invitations_screen.dart';
+import 'package:trip_central/features/settings/ui/settings_screen.dart';
 import 'package:trip_central/features/trips/ui/trip_discovery_screen.dart'
     as discovery;
 
@@ -111,6 +112,17 @@ class GenericHomeScreen extends StatelessWidget {
                 ),
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // Opening Settings screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+            tooltip: 'Settings',
           ),
         ],
       ),
