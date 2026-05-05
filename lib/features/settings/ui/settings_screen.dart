@@ -15,12 +15,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _profile;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isSavingPassword = false;
 
   // State for the inline form
   final _formKey = GlobalKey<FormState>();
+  final _passwordFormKey = GlobalKey<FormState>();
+  
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  
   bool _isEditingName = false;
+  bool _isEditingPassword = false;
 
   @override
   void initState() {
@@ -32,6 +39,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _nameController.dispose();
     _passwordController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
     super.dispose();
   }
 
@@ -75,6 +84,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _savePassword() async {
+    if (!_passwordFormKey.currentState!.validate()) return;
+
+    setState(() => _isSavingPassword = true);
+    try {
+      await _settingsService.updatePassword(
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully!')));
+        setState(() {
+          _isEditingPassword = false;
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+        });
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating password: $e')));
+    } finally {
+      if (mounted) setState(() => _isSavingPassword = false);
+    }
+  }
+
   Future<void> _logout() async {
     try {
       await _settingsService.signOut();
@@ -104,6 +138,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(16.0),
               children: [
                 _buildProfileSection(theme),
+                const SizedBox(height: 16),
+                _buildPasswordSection(theme),
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
@@ -197,6 +233,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: _isSaving
                             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                             : const Text('Save Changes'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPasswordSection(ThemeData theme) {
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const CircleAvatar(child: Icon(Icons.lock)),
+            title: const Text('Password', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Update your password'),
+            trailing: IconButton(
+              icon: Icon(_isEditingPassword ? Icons.close : Icons.edit),
+              onPressed: () {
+                setState(() {
+                  _isEditingPassword = !_isEditingPassword;
+                  if (!_isEditingPassword) {
+                    _currentPasswordController.clear();
+                    _newPasswordController.clear();
+                  }
+                });
+              },
+            ),
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 300),
+            crossFadeState: _isEditingPassword ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            firstChild: const SizedBox(width: double.infinity, height: 0),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+              child: Form(
+                key: _passwordFormKey,
+                child: Column(
+                  children: [
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _currentPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Current Password',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Current password is required to confirm changes';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _newPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'New Password',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a new password';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters long';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _isSavingPassword ? null : _savePassword,
+                        child: _isSavingPassword
+                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Update Password'),
                       ),
                     ),
                   ],

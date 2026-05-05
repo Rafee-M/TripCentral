@@ -57,9 +57,32 @@ class SettingsService {
     }
   }
 
+  /// Updates the user's password after verifying their current password
+  Future<void> updatePassword({required String currentPassword, required String newPassword}) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null || user.email == null) {
+        throw Exception('User not authenticated or missing email');
+      }
+
+      // 1. Verify password by re-authenticating
+      await _supabase.auth.signInWithPassword(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      // 2. Update the password
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Logs out the user
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
 }
-

@@ -142,7 +142,7 @@ class TripService {
   }
 }
 
-/// Traditional Builder Class to construct Trip Payloads step-by-step
+/// Builder Class to construct Trip Payloads step-by-step
 class TripBuilder {
   String? _title;
   String? _description;
