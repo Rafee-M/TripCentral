@@ -107,7 +107,7 @@ class TripService {
     }
   }
 
-  /// Traditional Builder Pattern Implementation: Creates trip using a built payload
+  /// Builder Pattern Implementation: Creates trip using a built payload
   Future<TripList> createTrip(TripBuilder builder) async {
     try {
       final userId = _supabase.auth.currentUser?.id;

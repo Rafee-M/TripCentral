@@ -41,6 +41,8 @@ class _TripListDetailScreenState extends State<TripListDetailScreen> {
           .eq('id', widget.tripList['id'])
           .maybeSingle();
 
+      // SECURITY CHECK: If the database (via RLS) returns nothing,
+      // the app immediately kicks the user out of the screen
       if (tripRes == null) {
         if (mounted)
           ScaffoldMessenger.of(context).showSnackBar(

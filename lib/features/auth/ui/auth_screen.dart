@@ -40,6 +40,7 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  // Strategy Context
   void _onModeChanged(Set<AuthMode> selected) {
     if (selected.isEmpty) return;
     setState(() {

@@ -22,7 +22,7 @@ class _PendingInvitationsScreenState extends State<PendingInvitationsScreen> {
   Future<void> _fetchInvitations() async {
     setState(() => _isLoading = true);
     try {
-      final res = await _tripService.getPendingInvitations();
+      final res = await _tripService.getPendingInvitations(); //Facade
 
       setState(() {
         _invitations = res;
