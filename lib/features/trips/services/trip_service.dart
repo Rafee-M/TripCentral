@@ -107,37 +107,15 @@ class TripService {
     }
   }
 
-  /// Builders Pattern conceptually: Assemble payload from modular variables to store in DB
-  Future<TripList> createTrip({
-    required String title,
-    String? description,
-    bool isPublic = false,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  /// Traditional Builder Pattern Implementation: Creates trip using a built payload
+  Future<TripList> createTrip(TripBuilder builder) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
         throw Exception('User is not authenticated');
       }
 
-      final payload = <String, dynamic>{
-        'owner_id': userId,
-        'title': title,
-        'is_public': isPublic,
-      };
-
-      if (description != null && description.trim().isNotEmpty) {
-        payload['description'] = description.trim();
-      }
-
-      if (startDate != null) {
-        payload['start_date'] = startDate.toIso8601String().split('T').first;
-      }
-      
-      if (endDate != null) {
-        payload['end_date'] = endDate.toIso8601String().split('T').first;
-      }
+      final payload = builder.build(userId);
 
       // Workaround for Supabase RLS "new row violates row-level security":
       // The SELECT policy checks `can_access_trip` which is a STABLE function. 
@@ -151,7 +129,7 @@ class TripService {
           .from('trip_lists')
           .select()
           .eq('owner_id', userId)
-          .eq('title', title)
+          .eq('title', payload['title'])
           .order('created_at', ascending: false)
           .limit(1)
           .single();
@@ -161,5 +139,65 @@ class TripService {
       // Intercept errors transparently
       rethrow;
     }
+  }
+}
+
+/// Traditional Builder Class to construct Trip Payloads step-by-step
+class TripBuilder {
+  String? _title;
+  String? _description;
+  bool _isPublic = false;
+  DateTime? _startDate;
+  DateTime? _endDate;
+
+  TripBuilder setTitle(String title) {
+    _title = title;
+    return this;
+  }
+
+  TripBuilder setDescription(String? description) {
+    _description = description;
+    return this;
+  }
+
+  TripBuilder setIsPublic(bool isPublic) {
+    _isPublic = isPublic;
+    return this;
+  }
+
+  TripBuilder setStartDate(DateTime? startDate) {
+    _startDate = startDate;
+    return this;
+  }
+
+  TripBuilder setEndDate(DateTime? endDate) {
+    _endDate = endDate;
+    return this;
+  }
+
+  Map<String, dynamic> build(String userId) {
+    if (_title == null || _title!.trim().isEmpty) {
+      throw Exception('Title is required');
+    }
+
+    final payload = <String, dynamic>{
+      'owner_id': userId,
+      'title': _title!.trim(),
+      'is_public': _isPublic,
+    };
+
+    if (_description != null && _description!.trim().isNotEmpty) {
+      payload['description'] = _description!.trim();
+    }
+
+    if (_startDate != null) {
+      payload['start_date'] = _startDate!.toIso8601String().split('T').first;
+    }
+
+    if (_endDate != null) {
+      payload['end_date'] = _endDate!.toIso8601String().split('T').first;
+    }
+
+    return payload;
   }
 }

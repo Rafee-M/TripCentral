@@ -60,14 +60,16 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Use the traditional Builder Design Pattern to cleanly assemble the object step-by-step
+      final builder = TripBuilder()
+          .setTitle(_title)
+          .setDescription(_description)
+          .setIsPublic(_isPublic)
+          .setStartDate(_startDate)
+          .setEndDate(_endDate);
+
       // Connect to the Facade wrapper saving user inputted values back to DB schema format seamlessly wrapper.
-      await _tripService.createTrip(
-        title: _title,
-        description: _description,
-        isPublic: _isPublic,
-        startDate: _startDate,
-        endDate: _endDate,
-      );
+      await _tripService.createTrip(builder);
 
       if (!mounted) return;
 
@@ -202,5 +204,3 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     );
   }
 }
-
-
